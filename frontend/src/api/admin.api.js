@@ -1,6 +1,6 @@
 import client from './client';
 
-const BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3000';
+const BASE_URL = process.env.API_URL || 'http://localhost:3000';
 
 export const AdminApi = {
   getStats:      (date)     => client.get('/admin/stats', { params: { date } }),
