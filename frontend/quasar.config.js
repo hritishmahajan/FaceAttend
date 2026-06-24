@@ -14,9 +14,7 @@ module.exports = configure(function (/* ctx */) {
     build: {
       target: { browser: ['es2019', 'edge88', 'firefox78', 'chrome87', 'safari13.1'], node: 'node20' },
       vueRouterMode: 'hash',
-      env: {
-        API_URL: process.env.API_URL || 'http://localhost:3000',
-      },
+      // VITE_API_URL is read directly by src/api/client.js via import.meta.env
     },
 
     devServer: { open: true },

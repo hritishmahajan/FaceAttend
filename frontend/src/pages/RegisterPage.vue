@@ -8,21 +8,17 @@
 
       <q-card-section>
         <q-form @submit.prevent="register" class="q-gutter-md">
-          <q-input v-model="form.name" label="Full Name" outlined dense
-            :rules="[v => !!v || 'Required']">
+          <q-input v-model="form.name" label="Full Name" outlined dense :rules="[v => !!v || 'Required']">
             <template #prepend><q-icon name="person" /></template>
           </q-input>
-
           <q-input v-model="form.email" label="Email" type="email" outlined dense
             :rules="[v => !!v || 'Required', v => /.+@.+/.test(v) || 'Invalid email']">
             <template #prepend><q-icon name="email" /></template>
           </q-input>
-
-          <q-input v-model="form.phone" label="Phone" type="tel" outlined dense
+          <q-input v-model="form.phone" label="Phone (10 digits)" type="tel" outlined dense
             :rules="[v => !!v || 'Required', v => /^\d{10}$/.test(v) || '10 digits required']">
             <template #prepend><q-icon name="phone" /></template>
           </q-input>
-
           <q-input v-model="form.password" label="Password" :type="showPwd ? 'text' : 'password'"
             outlined dense :rules="[v => !!v || 'Required', v => v.length >= 6 || 'Min 6 chars']">
             <template #prepend><q-icon name="lock" /></template>
@@ -30,7 +26,6 @@
               <q-icon :name="showPwd ? 'visibility_off' : 'visibility'" class="cursor-pointer" @click="showPwd = !showPwd" />
             </template>
           </q-input>
-
           <q-btn type="submit" label="Register" color="primary" class="full-width" :loading="loading" />
         </q-form>
       </q-card-section>
@@ -46,7 +41,7 @@
 import { ref, reactive } from 'vue';
 import { useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
-import { api } from 'boot/axios';
+import { AuthApi } from 'src/api/auth.api';
 import { useAuthStore } from 'src/stores/auth';
 
 const $q = useQuasar();
@@ -59,7 +54,7 @@ const form = reactive({ name: '', email: '', phone: '', password: '' });
 async function register() {
   loading.value = true;
   try {
-    const { data } = await api.post('/api/auth/register', form);
+    const { data } = await AuthApi.register(form);
     auth.pendingUserId = data.userId;
     $q.notify({ type: 'positive', message: 'Account created! Check your email for OTP.' });
     router.push({ path: '/verify-otp', query: { mode: 'register' } });
