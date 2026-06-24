@@ -9,25 +9,13 @@
 
       <q-card-section>
         <q-form @submit.prevent="login" class="q-gutter-md">
-          <q-input
-            v-model="form.email"
-            label="Email"
-            type="email"
-            outlined
-            dense
-            :rules="[v => !!v || 'Required', v => /.+@.+/.test(v) || 'Invalid email']"
-          >
+          <q-input v-model="form.email" label="Email" type="email" outlined dense
+            :rules="[v => !!v || 'Required', v => /.+@.+/.test(v) || 'Invalid email']">
             <template #prepend><q-icon name="email" /></template>
           </q-input>
 
-          <q-input
-            v-model="form.password"
-            label="Password"
-            :type="showPwd ? 'text' : 'password'"
-            outlined
-            dense
-            :rules="[v => !!v || 'Required']"
-          >
+          <q-input v-model="form.password" label="Password" :type="showPwd ? 'text' : 'password'"
+            outlined dense :rules="[v => !!v || 'Required']">
             <template #prepend><q-icon name="lock" /></template>
             <template #append>
               <q-icon :name="showPwd ? 'visibility_off' : 'visibility'" class="cursor-pointer" @click="showPwd = !showPwd" />
@@ -49,7 +37,7 @@
 import { ref, reactive } from 'vue';
 import { useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
-import { api } from 'boot/axios';
+import { AuthApi } from 'src/api/auth.api';
 import { useAuthStore } from 'src/stores/auth';
 
 const $q = useQuasar();
@@ -62,12 +50,13 @@ const form = reactive({ email: '', password: '' });
 async function login() {
   loading.value = true;
   try {
-    const { data } = await api.post('/api/auth/login', form);
+    const { data } = await AuthApi.login(form);
     auth.pendingUserId = data.userId;
     router.push({ path: '/verify-otp', query: { mode: 'login' } });
   } catch (err) {
+    const status = err.response?.status;
     const msg = err.response?.data?.error ?? 'Login failed';
-    if (err.response?.status === 403) {
+    if (status === 403) {
       auth.pendingUserId = err.response.data.userId;
       router.push({ path: '/verify-otp', query: { mode: 'verify' } });
     } else {

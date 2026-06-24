@@ -8,7 +8,6 @@
       </q-card-section>
 
       <q-card-section>
-        <!-- OTP digit boxes -->
         <div class="row justify-center q-gutter-sm q-mb-lg">
           <q-input
             v-for="(_, i) in digits"
@@ -16,10 +15,8 @@
             v-model="digits[i]"
             :ref="el => { if (el) inputs[i] = el; }"
             maxlength="1"
-            outlined
-            dense
-            class="otp-box"
-            style="width:44px;text-align:center"
+            outlined dense
+            style="width:44px"
             input-style="text-align:center;font-size:1.4rem;font-weight:bold"
             @input="onDigit(i, $event)"
             @keydown.backspace="onBack(i)"
@@ -27,11 +24,11 @@
         </div>
 
         <q-btn label="Verify" color="primary" class="full-width q-mb-sm" :loading="loading" @click="verify" />
-        <q-btn label="Resend OTP" flat color="primary" class="full-width" :loading="resending" @click="resend" />
-      </q-card-section>
-
-      <q-card-section class="text-center q-pt-none">
-        <div class="text-caption text-grey">{{ countdown > 0 ? `Resend in ${countdown}s` : 'You can resend now' }}</div>
+        <q-btn label="Resend OTP" flat color="primary" class="full-width"
+          :loading="resending" :disable="countdown > 0" @click="resend" />
+        <div class="text-center text-caption text-grey q-mt-xs">
+          {{ countdown > 0 ? `Resend in ${countdown}s` : 'You can resend now' }}
+        </div>
       </q-card-section>
     </q-card>
   </q-page>
@@ -39,19 +36,18 @@
 
 <script setup>
 import { ref, reactive, onMounted, onUnmounted } from 'vue';
-import { useRouter, useRoute } from 'vue-router';
+import { useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
-import { api } from 'boot/axios';
+import { AuthApi } from 'src/api/auth.api';
 import { useAuthStore } from 'src/stores/auth';
 
-const $q = useQuasar();
+const $q     = useQuasar();
 const router = useRouter();
-const route = useRoute();
-const auth = useAuthStore();
+const auth   = useAuthStore();
 
-const digits = reactive(['', '', '', '', '', '']);
-const inputs = ref([]);
-const loading = ref(false);
+const digits   = reactive(['', '', '', '', '', '']);
+const inputs   = ref([]);
+const loading  = ref(false);
 const resending = ref(false);
 const countdown = ref(60);
 let timer = null;
@@ -73,19 +69,14 @@ function onBack(i) {
 
 async function verify() {
   const otp = digits.join('');
-  if (otp.length !== 6) return $q.notify({ type: 'warning', message: 'Enter 6-digit OTP' });
+  if (otp.length !== 6) return $q.notify({ type: 'warning', message: 'Enter all 6 digits' });
   loading.value = true;
   try {
-    const { data } = await api.post('/api/auth/verify-otp', { userId: auth.pendingUserId, otp });
+    const { data } = await AuthApi.verifyOtp({ userId: auth.pendingUserId, otp });
     auth.setToken(data.token);
     auth.setUser(data.user);
-    $q.notify({ type: 'positive', message: 'Verified!' });
-
-    if (!data.user.face_descriptor) {
-      router.replace('/face-setup');
-    } else {
-      router.replace(auth.isAdmin ? '/admin' : '/dashboard');
-    }
+    $q.notify({ type: 'positive', message: 'Verified successfully!' });
+    router.replace(data.user.face_descriptor ? (auth.isAdmin ? '/admin' : '/dashboard') : '/face-setup');
   } catch (err) {
     $q.notify({ type: 'negative', message: err.response?.data?.error ?? 'Invalid OTP' });
     digits.fill('');
@@ -99,9 +90,9 @@ async function resend() {
   if (countdown.value > 0) return;
   resending.value = true;
   try {
-    await api.post('/api/auth/resend-otp', { userId: auth.pendingUserId });
+    await AuthApi.resendOtp({ userId: auth.pendingUserId });
     countdown.value = 60;
-    $q.notify({ type: 'positive', message: 'OTP resent' });
+    $q.notify({ type: 'positive', message: 'OTP resent to your email' });
   } catch {
     $q.notify({ type: 'negative', message: 'Failed to resend OTP' });
   } finally {

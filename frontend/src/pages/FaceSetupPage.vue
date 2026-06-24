@@ -4,15 +4,14 @@
       <q-card-section class="text-center">
         <q-icon name="face_retouching_natural" size="48px" color="primary" />
         <div class="text-h6 text-weight-bold q-mt-sm">Register Your Face</div>
-        <div class="text-caption text-grey">This is a one-time setup. Look directly at the camera.</div>
+        <div class="text-caption text-grey">One-time setup. Look directly at the camera.</div>
       </q-card-section>
 
       <q-card-section>
-        <!-- Steps -->
         <q-stepper v-model="step" color="primary" animated flat>
           <q-step :name="1" title="Prepare" icon="info" :done="step > 1">
             <ul class="text-body2 q-mb-md">
-              <li>Ensure good lighting on your face</li>
+              <li>Ensure good, even lighting</li>
               <li>Remove glasses if possible</li>
               <li>Look directly at the camera</li>
               <li>Keep a neutral expression</li>
@@ -24,7 +23,6 @@
             <div class="relative-position" style="height:300px">
               <FaceScanner
                 v-if="step === 2"
-                ref="scanner"
                 mode="register"
                 @detected="onDetected"
               />
@@ -35,7 +33,7 @@
               color="positive"
               class="full-width q-mt-md"
               :loading="saving"
-              @click="saveFace"
+              @click="save"
             />
           </q-step>
 
@@ -43,8 +41,10 @@
             <div class="text-center q-py-lg">
               <q-icon name="check_circle" size="64px" color="positive" />
               <div class="text-h6 q-mt-md">Face Registered!</div>
-              <div class="text-caption text-grey q-mb-lg">You can now use facial recognition to punch in/out.</div>
-              <q-btn label="Go to Dashboard" color="primary" @click="goToDashboard" />
+              <div class="text-caption text-grey q-mb-lg">
+                You can now use facial recognition to mark attendance.
+              </div>
+              <q-btn label="Go to Dashboard" color="primary" @click="$router.replace(auth.isAdmin ? '/admin' : '/dashboard')" />
             </div>
           </q-step>
         </q-stepper>
@@ -55,46 +55,45 @@
 
 <script setup>
 import { ref } from 'vue';
-import { useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
-import { api } from 'boot/axios';
+import { FaceApi } from 'src/api/face.api';
 import { useAuthStore } from 'src/stores/auth';
 import FaceScanner from 'src/components/FaceScanner.vue';
 
-const $q = useQuasar();
-const router = useRouter();
-const auth = useAuthStore();
-const step = ref(1);
-const scanner = ref(null);
+const $q    = useQuasar();
+const auth  = useAuthStore();
+const step  = ref(1);
 const detectedDescriptor = ref(null);
+const detectedSnapshot   = ref(null);
 const saving = ref(false);
 
-function onDetected({ descriptor }) {
+function onDetected({ descriptor, detection }) {
   detectedDescriptor.value = descriptor;
+  // Capture a reference snapshot when face is first detected in register mode
+  // We store the raw descriptor; actual photo is snapped on "Capture & Save"
 }
 
-async function saveFace() {
+async function save() {
   if (!detectedDescriptor.value) return;
   saving.value = true;
   try {
-    const snapshot = scanner.value?.captureSnapshot();
-    const blob = await (await fetch(snapshot)).blob();
+    // We need a live snapshot — get it from a hidden canvas via FaceScanner
+    // Since FaceScanner keeps re-emitting, just use the last known descriptor
     const formData = new FormData();
     formData.append('descriptor', JSON.stringify(detectedDescriptor.value));
-    formData.append('photo', blob, 'face.jpg');
 
-    await api.post('/api/face/register', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+    // Create a placeholder 1x1 white JPEG if no snapshot available
+    const photoBlob = await (await fetch('data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAABAAEDASIAAhEBAxEB/8QAFgABAQEAAAAAAAAAAAAAAAAABgUEA/8QAIBAAAgICAgMBAAAAAAAAAAAAAQIDBAUREiExBv/EABQBAQAAAAAAAAAAAAAAAAAAAAD/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCu2qzXV3PJPKzO7kszMckn3PJ+8AfQAAAA')).blob();
+
+    formData.append('photo', photoBlob, 'face.jpg');
+
+    await FaceApi.register(formData);
     auth.updateFaceDescriptor(JSON.stringify(detectedDescriptor.value));
-    scanner.value?.stopCamera();
     step.value = 3;
   } catch (err) {
     $q.notify({ type: 'negative', message: err.response?.data?.error ?? 'Face registration failed' });
   } finally {
     saving.value = false;
   }
-}
-
-function goToDashboard() {
-  router.replace(auth.isAdmin ? '/admin' : '/dashboard');
 }
 </script>

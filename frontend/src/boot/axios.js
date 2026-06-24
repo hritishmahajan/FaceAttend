@@ -1,30 +1,10 @@
 import { boot } from 'quasar/wrappers';
-import axios from 'axios';
-import { useAuthStore } from 'src/stores/auth';
+import apiClient from 'src/api/client';
 
-const api = axios.create({ baseURL: process.env.API_URL || 'http://localhost:3000' });
-
+// Make the API client accessible as this.$api in Options API components.
+// Composition API components import directly from src/api/*.
 export default boot(({ app }) => {
-  api.interceptors.request.use(config => {
-    const auth = useAuthStore();
-    if (auth.token) config.headers.Authorization = `Bearer ${auth.token}`;
-    return config;
-  });
-
-  api.interceptors.response.use(
-    res => res,
-    err => {
-      if (err.response?.status === 401) {
-        const auth = useAuthStore();
-        auth.logout();
-        window.location.href = '/#/login';
-      }
-      return Promise.reject(err);
-    }
-  );
-
-  app.config.globalProperties.$axios = axios;
-  app.config.globalProperties.$api = api;
+  app.config.globalProperties.$api = apiClient;
 });
 
-export { api };
+export { apiClient as api };

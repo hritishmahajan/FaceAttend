@@ -1,46 +1,66 @@
-require('dotenv').config();
+const config = require('./config');
 const express = require('express');
 const cors = require('cors');
 const rateLimit = require('express-rate-limit');
 const path = require('path');
 const bcrypt = require('bcryptjs');
 const { v4: uuidv4 } = require('uuid');
-
-const db = require('./db');
+const logger = require('./utils/logger');
+const { errorHandler } = require('./middleware/errorHandler');
+const UserRepository = require('./repositories/user.repository');
 
 const app = express();
+
+// ── Core middleware ────────────────────────────────────────────────────────────
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Rate limiting
-app.use('/api/auth', rateLimit({ windowMs: 15 * 60 * 1000, max: 30, message: { error: 'Too many requests' } }));
+// Request logging
+app.use((req, _res, next) => {
+  logger.debug(`${req.method} ${req.path}`);
+  next();
+});
 
-// Routes
-app.use('/api/auth', require('./routes/auth'));
-app.use('/api/face', require('./routes/face'));
-app.use('/api/attendance', require('./routes/attendance'));
-app.use('/api/admin', require('./routes/admin'));
+// ── Rate limiting ──────────────────────────────────────────────────────────────
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests, try again later.' },
+});
+app.use('/api/v1/auth', authLimiter);
 
-// Serve uploaded photos
+// ── Routes (versioned) ────────────────────────────────────────────────────────
+app.use('/api/v1', require('./routes/v1'));
+
+// Static file serving for uploaded photos (admin-only route handles auth)
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Health check
-app.get('/health', (req, res) => res.json({ status: 'ok', time: new Date().toISOString() }));
+app.get('/health', (_req, res) => res.json({ status: 'ok', version: 'v1', time: new Date().toISOString() }));
 
-// Bootstrap admin user
+// ── Central error handler (must be last) ──────────────────────────────────────
+app.use(errorHandler);
+
+// ── Bootstrap admin account ───────────────────────────────────────────────────
 async function seedAdmin() {
-  const existing = db.prepare('SELECT id FROM users WHERE email=?').get(process.env.ADMIN_EMAIL);
+  const existing = UserRepository.findByEmail(config.admin.email);
   if (existing) return;
-  const hash = await bcrypt.hash(process.env.ADMIN_PASSWORD, 10);
-  db.prepare(
-    'INSERT INTO users (id,name,email,phone,password,role,is_verified) VALUES (?,?,?,?,?,?,1)'
-  ).run(uuidv4(), 'Admin', process.env.ADMIN_EMAIL, '0000000000', hash, 'admin');
-  console.log(`Admin seeded: ${process.env.ADMIN_EMAIL}`);
+  const hash = await bcrypt.hash(config.admin.password, 10);
+  UserRepository.createAdmin({
+    id: uuidv4(),
+    name: 'Admin',
+    email: config.admin.email,
+    phone: '0000000000',
+    password: hash,
+  });
+  logger.info(`Admin seeded: ${config.admin.email}`);
 }
 
-const PORT = process.env.PORT ?? 3000;
-app.listen(PORT, async () => {
+// ── Start ──────────────────────────────────────────────────────────────────────
+app.listen(config.port, async () => {
   await seedAdmin();
-  console.log(`Server running on port ${PORT}`);
+  logger.info(`Server running on port ${config.port} [${config.env}]`);
 });
