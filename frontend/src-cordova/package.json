@@ -1,0 +1,7 @@
+{
+  "name": "face-attend-cordova",
+  "version": "1.0.0",
+  "description": "Cordova wrapper for FaceAttend",
+  "main": "index.js",
+  "dependencies": {}
+}
