@@ -5,19 +5,26 @@ module.exports = configure(function (/* ctx */) {
   return {
     eslint: { warnings: true, errors: true },
 
-    boot: ['axios', 'face-api'],
+    // Boot files run before the Vue app mounts (order matters)
+    boot: ['pinia', 'axios', 'face-api'],
 
     css: ['app.scss'],
 
-    extras: ['roboto-font', 'material-icons', 'fontawesome-v6'],
+    extras: ['roboto-font', 'material-icons'],
 
     build: {
-      target: { browser: ['es2019', 'edge88', 'firefox78', 'chrome87', 'safari13.1'], node: 'node20' },
+      target: {
+        browser: ['es2019', 'edge88', 'firefox78', 'chrome87', 'safari13.1'],
+        node: 'node20',
+      },
       vueRouterMode: 'hash',
-      // VITE_API_URL is read directly by src/api/client.js via import.meta.env
+      // Inject API base URL into the bundle via process.env (webpack DefinePlugin)
+      env: {
+        API_URL: process.env.VITE_API_URL || process.env.API_URL || 'http://localhost:3000',
+      },
     },
 
-    devServer: { open: true },
+    devServer: { open: false },
 
     framework: {
       config: { notify: { position: 'top' } },
@@ -26,22 +33,9 @@ module.exports = configure(function (/* ctx */) {
 
     animations: 'all',
 
-    ssr: { pwa: false, prodPort: 3001, middlewares: ['render'] },
-
-    pwa: {
-      workboxMode: 'generateSW',
-      injectPwaMetaTags: true,
-      swFilename: 'sw.js',
-      manifestFilename: 'manifest.json',
-    },
-
     cordova: {
       id: 'com.mahajan.attendance',
       noIosLegacyBuildFlag: true,
     },
-
-    capacitor: { hideSplashScreenOnAppLoad: true },
-
-    electron: { inspectPort: 5858, bundler: 'packager' },
   };
 });

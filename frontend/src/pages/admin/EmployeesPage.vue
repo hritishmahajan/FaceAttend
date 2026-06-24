@@ -31,7 +31,7 @@
 import { ref, onMounted } from 'vue';
 import { AdminApi } from 'src/api/admin.api';
 
-const baseUrl   = import.meta.env.VITE_API_URL ?? 'http://localhost:3000';
+const baseUrl   = process.env.API_URL || 'http://localhost:3000';
 const employees = ref([]);
 const loading   = ref(true);
 const filter    = ref('');
