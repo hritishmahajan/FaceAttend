@@ -11,3 +11,7 @@ uploads/*
 src-cordova/platforms/
 src-cordova/plugins/
 coverage/
+
+# Backend uploads (runtime-generated)
+backend/uploads/*
+!backend/uploads/.gitkeep

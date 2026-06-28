@@ -2,7 +2,7 @@
   "name": "face-attendance-app",
   "version": "1.0.0",
   "description": "On-Device Facial Attendance App with Geofencing",
-  "productName": "FaceAttend",
+  "productName": "Dekho Mai Aagya!",
   "author": "Mahajan",
   "private": true,
   "scripts": {
@@ -13,15 +13,16 @@
   },
   "dependencies": {
     "@quasar/extras": "^1.16.11",
+    "@vladmandic/face-api": "^1.7.15",
     "axios": "^1.7.2",
-    "face-api.js": "^0.22.2",
+    "fs": "^0.0.1-security",
     "pinia": "^2.1.7",
     "quasar": "^2.16.4",
     "vue": "^3.4.29",
     "vue-router": "^4.3.3"
   },
   "devDependencies": {
-    "@quasar/app-webpack": "^3.14.0",
+    "@quasar/app-webpack": "^4.4.5",
     "@quasar/babel-preset-app": "^2.0.4",
     "@types/node": "^20.14.8",
     "autoprefixer": "^10.5.1",

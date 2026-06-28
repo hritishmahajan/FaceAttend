@@ -1,0 +1,34 @@
+services:
+  - type: web
+    name: dekho-mai-aagya-api
+    runtime: node
+    rootDir: backend
+    plan: free
+    buildCommand: npm install
+    startCommand: node server.js
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      - key: OFFICE_LAT
+        value: "32.060877"
+      - key: OFFICE_LNG
+        value: "75.502502"
+      - key: OFFICE_RADIUS_METERS
+        value: "200"
+      - key: ADMIN_EMAIL
+        value: admin@company.com
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: EMAIL_HOST
+        value: smtp.gmail.com
+      - key: EMAIL_PORT
+        value: "587"
+      - key: EMAIL_USER
+        sync: false
+      - key: EMAIL_PASS
+        sync: false

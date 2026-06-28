@@ -6,6 +6,15 @@ const { AppError } = require('../../middleware/errorHandler');
 
 const router = express.Router();
 
+// Photo route is registered BEFORE the auth guard so <img> tags (which can't
+// send an Authorization header) can load attendance photos.
+router.get('/photo/:filename', (req, res) => {
+  const file = path.join(__dirname, '../../uploads', req.params.filename);
+  res.sendFile(file, err => {
+    if (err) res.status(404).json({ error: 'Photo not found' });
+  });
+});
+
 router.use(authMiddleware, adminOnly);
 
 router.get('/stats', (req, res, next) => {
@@ -33,13 +42,6 @@ router.get('/employees', (req, res, next) => {
   try {
     res.json(AdminService.getEmployees());
   } catch (err) { next(err); }
-});
-
-router.get('/photo/:filename', (req, res) => {
-  const file = path.join(__dirname, '../../uploads', req.params.filename);
-  res.sendFile(file, err => {
-    if (err) res.status(404).json({ error: 'Photo not found' });
-  });
 });
 
 router.get('/geofence', (req, res, next) => {

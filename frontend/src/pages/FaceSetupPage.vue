@@ -23,6 +23,7 @@
             <div class="relative-position" style="height:300px">
               <FaceScanner
                 v-if="step === 2"
+                ref="scannerRef"
                 mode="register"
                 @detected="onDetected"
               />
@@ -64,27 +65,26 @@ const $q    = useQuasar();
 const auth  = useAuthStore();
 const step  = ref(1);
 const detectedDescriptor = ref(null);
-const detectedSnapshot   = ref(null);
+const scannerRef = ref(null);
 const saving = ref(false);
 
-function onDetected({ descriptor, detection }) {
+function onDetected({ descriptor }) {
   detectedDescriptor.value = descriptor;
-  // Capture a reference snapshot when face is first detected in register mode
-  // We store the raw descriptor; actual photo is snapped on "Capture & Save"
+  // The actual photo is captured live from the scanner on "Capture & Save".
 }
 
 async function save() {
   if (!detectedDescriptor.value) return;
   saving.value = true;
   try {
-    // We need a live snapshot — get it from a hidden canvas via FaceScanner
-    // Since FaceScanner keeps re-emitting, just use the last known descriptor
+    // Grab a live JPEG snapshot from the running scanner.
+    const snapshot = scannerRef.value?.captureSnapshot();
+    if (!snapshot) throw new Error('Could not capture a photo. Please try again.');
+
     const formData = new FormData();
     formData.append('descriptor', JSON.stringify(detectedDescriptor.value));
 
-    // Create a placeholder 1x1 white JPEG if no snapshot available
-    const photoBlob = await (await fetch('data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAABAAEDASIAAhEBAxEB/8QAFgABAQEAAAAAAAAAAAAAAAAABgUEA/8QAIBAAAgICAgMBAAAAAAAAAAAAAQIDBAUREiExBv/EABQBAQAAAAAAAAAAAAAAAAAAAAD/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCu2qzXV3PJPKzO7kszMckn3PJ+8AfQAAAA')).blob();
-
+    const photoBlob = await (await fetch(snapshot)).blob();
     formData.append('photo', photoBlob, 'face.jpg');
 
     await FaceApi.register(formData);

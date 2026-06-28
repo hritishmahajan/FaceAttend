@@ -15,7 +15,7 @@ function signToken(user) {
   return jwt.sign({ id: user.id, role: user.role }, config.jwt.secret, { expiresIn: config.jwt.expiresIn });
 }
 
-async function issueOtp(userId, email) {
+async function issueOtp(userId, email, name) {
   const otp = generateOtp();
   OtpRepository.create({
     id: uuidv4(),
@@ -23,7 +23,7 @@ async function issueOtp(userId, email) {
     otp,
     expiresAt: new Date(Date.now() + config.otp.ttlMs).toISOString(),
   });
-  await EmailService.sendOtp(email, otp);
+  await EmailService.sendOtp(email, otp, name);
   return otp;
 }
 
@@ -35,7 +35,7 @@ async function register({ name, email, phone, password }) {
   const id = uuidv4();
   UserRepository.create({ id, name, email, phone, password: hash });
 
-  const otp = await issueOtp(id, email);
+  const otp = await issueOtp(id, email, name);
   return { userId: id, ...(config.env !== 'production' && { otp }) };
 }
 
@@ -50,8 +50,10 @@ async function login({ email, password }) {
   const valid = await bcrypt.compare(password, user.password);
   if (!valid) throw new AppError('Invalid credentials', 401);
 
-  const otp = await issueOtp(user.id, user.email);
-  return { userId: user.id, ...(config.env !== 'production' && { otp }) };
+  // Password is correct and the account is already verified — log in directly.
+  // (OTP is only used for first-time signup verification and password reset.)
+  const publicUser = UserRepository.publicFields(user.id);
+  return { token: signToken(publicUser), user: publicUser };
 }
 
 function verifyOtp({ userId, otp }) {
@@ -69,8 +71,29 @@ async function resendOtp(userId) {
   const user = UserRepository.findById(userId);
   if (!user) throw new AppError('User not found', 404);
 
-  const otp = await issueOtp(userId, user.email);
+  const otp = await issueOtp(userId, user.email, user.name);
   return { ...(config.env !== 'production' && { otp }) };
 }
 
-module.exports = { register, login, verifyOtp, resendOtp };
+async function forgotPassword({ email }) {
+  const user = UserRepository.findByEmail(email);
+  // Always respond the same way so we don't reveal which emails are registered.
+  if (user) await issueOtp(user.id, user.email, user.name);
+  return { message: 'If that email is registered, an OTP has been sent.' };
+}
+
+async function resetPassword({ email, otp, password }) {
+  const user = UserRepository.findByEmail(email);
+  if (!user) throw new AppError('Invalid email or OTP', 400);
+
+  const record = OtpRepository.findActiveForUser(user.id);
+  if (!record || record.otp !== otp) throw new AppError('Invalid or expired OTP', 400);
+
+  OtpRepository.markUsed(record.id);
+  const hash = await bcrypt.hash(password, 10);
+  UserRepository.updatePassword(user.id, hash);
+  UserRepository.markVerified(user.id);
+  return { message: 'Password updated. You can now log in.' };
+}
+
+module.exports = { register, login, verifyOtp, resendOtp, forgotPassword, resetPassword };

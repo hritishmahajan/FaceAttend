@@ -23,6 +23,10 @@ const UserRepository = {
     return db.prepare('UPDATE users SET is_verified=1 WHERE id=?').run(id);
   },
 
+  updatePassword(id, passwordHash) {
+    return db.prepare('UPDATE users SET password=? WHERE id=?').run(passwordHash, id);
+  },
+
   saveFaceDescriptor(id, descriptor, photoFilename) {
     return db.prepare('UPDATE users SET face_descriptor=?, face_photo=? WHERE id=?').run(descriptor, photoFilename, id);
   },

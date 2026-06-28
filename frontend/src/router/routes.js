@@ -7,6 +7,7 @@ const routes = [
       { path: 'login',       component: () => import('pages/LoginPage.vue'),      meta: { guest: true } },
       { path: 'register',    component: () => import('pages/RegisterPage.vue'),   meta: { guest: true } },
       { path: 'verify-otp',  component: () => import('pages/OtpPage.vue') },
+      { path: 'forgot-password', component: () => import('pages/ForgotPasswordPage.vue'), meta: { guest: true } },
       { path: 'face-setup',  component: () => import('pages/FaceSetupPage.vue'),  meta: { requiresAuth: true } },
     ],
   },

@@ -7,7 +7,7 @@
           <q-avatar size="28px" class="q-mr-sm">
             <q-icon name="face" />
           </q-avatar>
-          FaceAttend
+          Dekho Mai Aagya!
         </q-toolbar-title>
         <div class="row items-center q-gutter-xs">
           <span class="geofence-indicator" :class="geoStatus" />

@@ -3,8 +3,8 @@
     <q-card style="width:360px;max-width:95vw" class="q-pa-md shadow-4">
       <q-card-section class="text-center">
         <q-icon name="face" size="64px" color="primary" />
-        <div class="text-h5 text-weight-bold q-mt-sm">FaceAttend</div>
-        <div class="text-caption text-grey">Facial Attendance System</div>
+        <div class="text-h5 text-weight-bold q-mt-sm">Dekho Mai Aagya!</div>
+        <div class="text-caption text-grey">Haaziri lagao, jhanjhat bhagao</div>
       </q-card-section>
 
       <q-card-section>
@@ -26,8 +26,9 @@
         </q-form>
       </q-card-section>
 
-      <q-card-section class="text-center q-pt-none">
-        <router-link to="/register" class="text-primary">Don't have an account? Register</router-link>
+      <q-card-section class="text-center q-pt-none q-gutter-y-xs">
+        <router-link to="/forgot-password" class="text-primary block">Forgot password?</router-link>
+        <router-link to="/register" class="text-primary block">Don't have an account? Register</router-link>
       </q-card-section>
     </q-card>
   </q-page>
@@ -51,8 +52,9 @@ async function login() {
   loading.value = true;
   try {
     const { data } = await AuthApi.login(form);
-    auth.pendingUserId = data.userId;
-    router.push({ path: '/verify-otp', query: { mode: 'login' } });
+    auth.setToken(data.token);
+    auth.setUser(data.user);
+    router.replace(data.user.face_descriptor ? (auth.isAdmin ? '/admin' : '/dashboard') : '/face-setup');
   } catch (err) {
     const status = err.response?.status;
     const msg = err.response?.data?.error ?? 'Login failed';

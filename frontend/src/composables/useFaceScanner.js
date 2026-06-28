@@ -1,5 +1,5 @@
 import { ref, onUnmounted } from 'vue';
-import * as faceapi from 'face-api.js';
+import * as faceapi from '@vladmandic/face-api';
 
 const MATCH_FRAMES_REQUIRED = 3;
 const SCAN_INTERVAL_MS = 300;
@@ -60,10 +60,16 @@ export function useFaceScanner(options, callbacks) {
     faceapi.matchDimensions(canvasEl.value, displaySize);
 
     intervalId = setInterval(async () => {
+      // The element refs may go null if the component unmounts mid-cycle.
+      if (!videoEl.value || !canvasEl.value) return;
+
       const detections = await faceapi
         .detectAllFaces(videoEl.value, new faceapi.TinyFaceDetectorOptions())
         .withFaceLandmarks(true)
         .withFaceDescriptors();
+
+      // Re-check after the await — the component may have unmounted by now.
+      if (!videoEl.value || !canvasEl.value) return;
 
       const resized = faceapi.resizeResults(detections, displaySize);
       const ctx = canvasEl.value.getContext('2d');

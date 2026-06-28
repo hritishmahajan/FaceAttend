@@ -1,11 +1,9 @@
-/* eslint-env node */
-const { configure } = require('quasar/wrappers');
+import { configure } from 'quasar/wrappers';
 
-module.exports = configure(function (/* ctx */) {
+export default configure(function (/* ctx */) {
   return {
     eslint: { warnings: true, errors: true },
 
-    // Boot files run before the Vue app mounts (order matters)
     boot: ['pinia', 'axios', 'face-api'],
 
     css: ['app.scss'],
@@ -18,13 +16,25 @@ module.exports = configure(function (/* ctx */) {
         node: 'node20',
       },
       vueRouterMode: 'hash',
-      // Inject API base URL into the bundle via process.env (webpack DefinePlugin)
+      // Served from a project subpath on GitHub Pages (/FaceAttend/) in prod.
+      publicPath: process.env.NODE_ENV === 'production' ? '/FaceAttend/' : '/',
       env: {
         API_URL: process.env.VITE_API_URL || process.env.API_URL || 'http://localhost:3000',
+        APP_BASE: process.env.NODE_ENV === 'production' ? '/FaceAttend' : '',
       },
     },
 
-    devServer: { open: false },
+    devServer: {
+      open: false,
+      client: {
+        overlay: {
+          // Don't cover the screen for benign browser noise.
+          warnings: false,
+          runtimeErrors: error =>
+            !/ResizeObserver loop|CoreLocation|kCLError/.test(error?.message ?? ''),
+        },
+      },
+    },
 
     framework: {
       config: { notify: { position: 'top' } },

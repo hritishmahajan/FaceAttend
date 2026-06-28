@@ -15,7 +15,7 @@ router.post('/register', validate(schemas.register), async (req, res, next) => {
 router.post('/login', validate(schemas.login), async (req, res, next) => {
   try {
     const result = await AuthService.login(req.body);
-    res.json({ message: 'OTP sent to your email.', ...result });
+    res.json({ message: 'Logged in.', ...result });
   } catch (err) { next(err); }
 });
 
@@ -30,6 +30,20 @@ router.post('/resend-otp', validate(schemas.resendOtp), async (req, res, next) =
   try {
     const result = await AuthService.resendOtp(req.body.userId);
     res.json({ message: 'OTP resent.', ...result });
+  } catch (err) { next(err); }
+});
+
+router.post('/forgot-password', validate(schemas.forgotPassword), async (req, res, next) => {
+  try {
+    const result = await AuthService.forgotPassword(req.body);
+    res.json(result);
+  } catch (err) { next(err); }
+});
+
+router.post('/reset-password', validate(schemas.resetPassword), async (req, res, next) => {
+  try {
+    const result = await AuthService.resetPassword(req.body);
+    res.json(result);
   } catch (err) { next(err); }
 });
 
