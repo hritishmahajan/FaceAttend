@@ -1,6 +1,6 @@
 import { configure } from 'quasar/wrappers';
 
-export default configure(function (/* ctx */) {
+export default configure(function (ctx) {
   return {
     eslint: { warnings: true, errors: true },
 
@@ -17,10 +17,10 @@ export default configure(function (/* ctx */) {
       },
       vueRouterMode: 'hash',
       // Served from a project subpath on GitHub Pages (/FaceAttend/) in prod.
-      publicPath: process.env.NODE_ENV === 'production' ? '/FaceAttend/' : '/',
+      publicPath: ctx.prod ? '/FaceAttend/' : '/',
       env: {
         API_URL: process.env.VITE_API_URL || process.env.API_URL || 'http://localhost:3000',
-        APP_BASE: process.env.NODE_ENV === 'production' ? '/FaceAttend' : '',
+        APP_BASE: ctx.prod ? '/FaceAttend' : '',
       },
     },
 
