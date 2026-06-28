@@ -15,8 +15,6 @@ A production-ready attendance system built with **Vue 3 + Quasar + Cordova** (fr
 | API Health | [/health →](https://face-attend-api.onrender.com/health) |
 | APK Download | [Releases →](../../releases/latest) |
 
-> **Default Admin Login**  
-> Email: `admin@company.com` · Password: `Admin@123`
 
 ---
 
