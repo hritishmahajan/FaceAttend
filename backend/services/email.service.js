@@ -11,6 +11,11 @@ function getTransporter() {
       host: config.email.host,
       port: config.email.port,
       auth: { user: config.email.user, pass: config.email.pass },
+      // Fail fast if SMTP is blocked (e.g. Render free tier) so requests
+      // aren't held open waiting for a long OS-level connection timeout.
+      connectionTimeout: 5000,
+      greetingTimeout: 5000,
+      socketTimeout: 5000,
     });
   }
   return _transporter;
