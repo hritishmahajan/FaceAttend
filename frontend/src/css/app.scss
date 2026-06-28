@@ -1,4 +1,37 @@
-// App-wide SCSS
+// App-wide SCSS · Indigo Block-Print
+
+body { font-family: $font-body; }
+
+.kolam-light {
+  background-color: $page-bg;
+  background-image: radial-gradient(rgba(30,42,110,.05) 1px, transparent 1.5px);
+  background-size: 15px 15px;
+}
+.kolam-dark {
+  background-color: $dark;
+  background-image: radial-gradient(rgba(244,163,0,.06) 1px, transparent 1.5px);
+  background-size: 16px 16px;
+}
+
+.brandname { font-family: $font-brand; line-height: 1; }
+.disp      { font-family: $font-display; font-weight: 400; }
+.dev       { font-family: $font-display; color: $accent; }
+.mono      { font-family: $font-mono; }
+
+.dmag-card {
+  background: $card-bg;
+  border: 1px solid $card-border;
+  border-radius: $radius-card;
+  box-shadow: 0 12px 24px -18px rgba(30,42,110,.5);
+}
+.lab {
+  font-size: 12.5px; font-weight: 700; color: $ink-muted;
+  text-transform: uppercase; letter-spacing: .05em; margin-bottom: 7px;
+}
+.trust-line {
+  display: flex; align-items: center; justify-content: center; gap: 7px;
+  font-size: 12.5px; color: $ink-muted; font-weight: 600;
+}
 
 .face-scan-overlay {
   position: absolute;

@@ -1,26 +1,27 @@
 <template>
-  <q-page class="q-pa-md">
-    <div class="text-h6 q-mb-md">
-      Good {{ timeOfDay }}, <strong>{{ auth.user?.name }}</strong>
+  <q-page class="kolam-light q-pa-md">
+    <div class="q-mb-md">
+      <div style="font-size:14px;color:#8A7D66;font-weight:600">{{ todayLabel }}</div>
+      <div class="disp" style="font-size:26px;color:#1E2A6E">Namaste, {{ auth.user?.name }}</div>
     </div>
 
     <!-- Geofence card -->
-    <q-card class="q-mb-md" :class="locationReady ? 'bg-green-1' : 'bg-red-1'">
-      <q-card-section class="row items-center q-gutter-sm">
-        <q-icon :name="locationReady ? 'location_on' : 'location_off'"
-          :color="locationReady ? 'positive' : 'negative'" size="32px" />
-        <div>
-          <div class="text-subtitle1 text-weight-bold">
-            {{ locationReady ? 'Location acquired' : (geoError ?? 'Acquiring location…') }}
-          </div>
-          <div v-if="geoPosition" class="text-caption text-grey">
-            {{ geoPosition.lat.toFixed(4) }}, {{ geoPosition.lng.toFixed(4) }}
-          </div>
+    <div class="dmag-card q-pa-md q-mb-md row items-center no-wrap"
+      :style="locationReady ? '' : 'background:#FBEEEC;border-color:#F0D3CE'">
+      <MandalaGeofence :inside="locationReady" :size="64" class="q-mr-md" />
+      <div class="col">
+        <div class="row items-center q-gutter-xs">
+          <span :style="`width:8px;height:8px;border-radius:50%;background:${locationReady ? '#2F7D4F' : '#C0392B'}`" />
+          <span class="text-weight-bold" :style="`color:${locationReady ? '#1E2A6E' : '#C0392B'}`">
+            {{ locationReady ? 'Inside geofence' : (geoError ?? 'Acquiring location…') }}
+          </span>
         </div>
-        <q-space />
-        <q-btn flat round dense icon="refresh" :loading="geoLoading" @click="refreshGeo" />
-      </q-card-section>
-    </q-card>
+        <div v-if="geoPosition" class="mono" style="font-size:12px;color:#8A7D66;margin-top:4px">
+          {{ geoPosition.lat.toFixed(4) }}, {{ geoPosition.lng.toFixed(4) }}
+        </div>
+      </div>
+      <q-btn flat round dense icon="refresh" color="primary" :loading="geoLoading" @click="refreshGeo" />
+    </div>
 
     <!-- Today's record -->
     <q-card class="attendance-card q-mb-md" :class="attendance.isPunchedOut ? 'punched-out' : ''">
@@ -43,30 +44,29 @@
       </q-card-section>
     </q-card>
 
-    <!-- Action buttons -->
-    <div class="row q-gutter-md justify-center q-mt-lg">
-      <q-btn
-        v-if="!attendance.isPunchedIn"
-        label="Punch In"
-        icon="login"
-        color="positive"
-        size="lg"
-        class="q-px-xl"
-        :disable="!locationReady || !auth.hasFace"
-        @click="openScan('in')"
-      />
-      <q-btn
-        v-else-if="!attendance.isPunchedOut"
-        label="Punch Out"
-        icon="logout"
-        color="negative"
-        size="lg"
-        class="q-px-xl"
-        :disable="!locationReady"
-        @click="openScan('out')"
-      />
+    <!-- Scan-to-punch lotus circle -->
+    <div class="column items-center q-mt-lg">
+      <template v-if="!attendance.isPunchedOut">
+        <div
+          :class="{ 'cursor-pointer': canScan }"
+          :style="`position:relative;width:212px;height:212px;display:flex;align-items:center;justify-content:center;${canScan ? '' : 'opacity:.5'}`"
+          @click="canScan && openScan(attendance.isPunchedIn ? 'out' : 'in')"
+        >
+          <LotusScanFrame />
+          <div class="column flex-center" style="width:170px;height:170px;border-radius:50%;background:#FFFDF7;border:2px solid #1E2A6E;box-shadow:0 16px 34px -16px rgba(30,42,110,.5);text-align:center">
+            <q-icon name="center_focus_strong" size="34px" color="primary" />
+            <div class="disp" style="font-size:18px;color:#1E2A6E;margin-top:6px">
+              Scan to punch {{ attendance.isPunchedIn ? 'out' : 'in' }}
+            </div>
+            <div style="font-size:12px;color:#A08C66;margin-top:2px">Chehra dikhao — bas ek tap</div>
+          </div>
+        </div>
+        <div class="trust-line q-mt-md">
+          <q-icon name="shield" color="positive" size="14px" />On device — no photo leaves your phone
+        </div>
+      </template>
       <q-chip v-else color="positive" icon="check_circle" text-color="white" size="lg">
-        Shift Complete – {{ attendance.shiftDuration }}
+        Shift complete – {{ attendance.shiftDuration }}
       </q-chip>
     </div>
 
@@ -113,6 +113,8 @@ import { useAttendanceStore } from 'src/stores/attendance.store';
 import { useGeolocation }     from 'src/composables/useGeolocation';
 import { useAttendance }      from 'src/composables/useAttendance';
 import FaceScanner            from 'src/components/FaceScanner.vue';
+import MandalaGeofence        from 'src/components/MandalaGeofence.vue';
+import LotusScanFrame         from 'src/components/LotusScanFrame.vue';
 
 const auth       = useAuthStore();
 const attendance = useAttendanceStore();
@@ -121,6 +123,9 @@ const { punch }  = useAttendance();
 const { position: geoPosition, error: geoError, loading: geoLoading, refresh: refreshGeo, startWatch } = useGeolocation();
 
 const locationReady = computed(() => !!geoPosition.value && !geoError.value);
+const canScan = computed(() =>
+  locationReady.value && (attendance.isPunchedIn ? !attendance.isPunchedOut : auth.hasFace)
+);
 const scanOpen  = ref(false);
 const scanType  = ref('in');
 
