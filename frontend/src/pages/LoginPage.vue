@@ -21,7 +21,7 @@
         <div>
           <div class="lab">Work email</div>
           <q-input v-model="form.email" type="email" outlined dense
-            placeholder="priya.sharma@company.in"
+            placeholder="osc@frosh.in"
             :rules="[v => !!v || 'Required', v => /.+@.+/.test(v) || 'Enter a valid work email']" />
         </div>
         <div>
