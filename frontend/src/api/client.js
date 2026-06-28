@@ -21,7 +21,7 @@ apiClient.interceptors.response.use(
     if (err.response?.status === 401) {
       LocalStorage.remove('token');
       LocalStorage.remove('user');
-      window.location.href = '/#/login';
+      window.location.hash = '#/login';
     }
     return Promise.reject(err);
   }
