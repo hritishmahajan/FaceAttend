@@ -1,7 +1,7 @@
 <template>
-  <q-page class="q-pa-md">
+  <q-page class="kolam-light q-pa-md">
     <div class="row items-center q-mb-md q-gutter-sm">
-      <div class="text-h6">Attendance Records</div>
+      <div class="disp" style="font-size:23px;color:#1E2A6E">Attendance records</div>
       <q-space />
       <q-input v-model="dateFilter" type="date" dense outlined label="Date"
         style="width:160px" @update:model-value="load" />

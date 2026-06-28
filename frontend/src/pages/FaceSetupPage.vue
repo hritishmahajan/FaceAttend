@@ -1,5 +1,6 @@
 <template>
   <q-page class="kolam-dark flex flex-center q-pa-md">
+    <BlockPrintBand dark class="absolute-top" />
     <q-card style="width:420px;max-width:100%;background:#1C1626;color:#FBF3E2" class="shadow-4">
       <q-card-section class="text-center">
         <q-icon name="face_retouching_natural" size="44px" color="secondary" />
@@ -67,6 +68,7 @@ import { useQuasar } from 'quasar';
 import { FaceApi } from 'src/api/face.api';
 import { useAuthStore } from 'src/stores/auth';
 import FaceScanner from 'src/components/FaceScanner.vue';
+import BlockPrintBand from 'src/components/BlockPrintBand.vue';
 
 const $q    = useQuasar();
 const auth  = useAuthStore();

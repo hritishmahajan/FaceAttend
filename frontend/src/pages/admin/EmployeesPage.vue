@@ -1,7 +1,7 @@
 <template>
-  <q-page class="q-pa-md">
+  <q-page class="kolam-light q-pa-md">
     <div class="row items-center q-mb-md">
-      <div class="text-h6">Employees</div>
+      <div class="disp" style="font-size:23px;color:#1E2A6E">Employees</div>
       <q-space />
       <q-btn outline color="primary" icon="refresh" label="Refresh" :loading="loading" @click="load" />
     </div>

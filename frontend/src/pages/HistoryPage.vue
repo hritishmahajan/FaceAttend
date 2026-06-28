@@ -1,6 +1,6 @@
 <template>
-  <q-page class="q-pa-md">
-    <div class="text-h6 q-mb-md">My Attendance History</div>
+  <q-page class="kolam-light q-pa-md">
+    <div class="disp q-mb-md" style="font-size:24px;color:#1E2A6E">My attendance</div>
 
     <q-list bordered separator rounded>
       <q-item v-if="attendance.loading">

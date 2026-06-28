@@ -1,7 +1,7 @@
 <template>
-  <q-page class="q-pa-md">
-    <div class="text-h6 q-mb-md">Profile</div>
-    <q-card class="q-mb-md">
+  <q-page class="kolam-light q-pa-md">
+    <div class="disp q-mb-md" style="font-size:24px;color:#1E2A6E">Profile</div>
+    <q-card class="dmag-card q-mb-md" flat>
       <q-card-section class="row items-center q-gutter-md">
         <q-avatar size="72px" color="primary" text-color="white" font-size="36px">
           {{ auth.user?.name?.[0]?.toUpperCase() }}
