@@ -27,6 +27,12 @@ const UserRepository = {
     return db.prepare('UPDATE users SET password=? WHERE id=?').run(passwordHash, id);
   },
 
+  deleteById(id) {
+    db.prepare('DELETE FROM attendance WHERE user_id=?').run(id);
+    db.prepare('DELETE FROM otps WHERE user_id=?').run(id);
+    return db.prepare("DELETE FROM users WHERE id=? AND role='employee'").run(id);
+  },
+
   saveFaceDescriptor(id, descriptor, photoFilename) {
     return db.prepare('UPDATE users SET face_descriptor=?, face_photo=? WHERE id=?').run(descriptor, photoFilename, id);
   },

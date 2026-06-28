@@ -44,6 +44,14 @@ router.get('/employees', (req, res, next) => {
   } catch (err) { next(err); }
 });
 
+router.delete('/employees/:id', (req, res, next) => {
+  try {
+    const result = AdminService.deleteEmployee(req.params.id);
+    if (!result.deleted) return next(new AppError('Employee not found', 404));
+    res.json({ message: 'Employee deleted' });
+  } catch (err) { next(err); }
+});
+
 router.get('/geofence', (req, res, next) => {
   try {
     res.json(AdminService.getGeofenceConfig());

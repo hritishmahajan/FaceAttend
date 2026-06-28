@@ -1,6 +1,10 @@
 <template>
   <q-page class="q-pa-md">
-    <div class="text-h6 q-mb-md">Employees</div>
+    <div class="row items-center q-mb-md">
+      <div class="text-h6">Employees</div>
+      <q-space />
+      <q-btn outline color="primary" icon="refresh" label="Refresh" :loading="loading" @click="load" />
+    </div>
     <q-table :rows="employees" :columns="columns" row-key="id" :loading="loading"
       flat bordered :filter="filter">
       <template #top-right>
@@ -23,14 +27,21 @@
           </q-chip>
         </q-td>
       </template>
+      <template #body-cell-actions="{ row }">
+        <q-td class="text-center">
+          <q-btn flat round dense color="negative" icon="delete" @click="confirmDelete(row)" />
+        </q-td>
+      </template>
     </q-table>
   </q-page>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue';
+import { useQuasar } from 'quasar';
 import { AdminApi } from 'src/api/admin.api';
 
+const $q = useQuasar();
 const baseUrl   = process.env.API_URL || 'http://localhost:3000';
 const employees = ref([]);
 const loading   = ref(true);
@@ -42,14 +53,35 @@ const columns = [
   { name: 'email',    label: 'Email',   field: 'email',       align: 'left' },
   { name: 'phone',    label: 'Phone',   field: 'phone',       align: 'left' },
   { name: 'verified', label: 'Status',  field: 'is_verified', align: 'center' },
+  { name: 'actions',  label: '',        field: 'id',          align: 'center' },
 ];
 
-onMounted(async () => {
+async function load() {
+  loading.value = true;
   try {
     const { data } = await AdminApi.getEmployees();
     employees.value = data;
   } finally {
     loading.value = false;
   }
-});
+}
+
+function confirmDelete(row) {
+  $q.dialog({
+    title: 'Delete employee',
+    message: `Remove ${row.name} and all their attendance records? This can't be undone.`,
+    cancel: true,
+    ok: { label: 'Delete', color: 'negative' },
+  }).onOk(async () => {
+    try {
+      await AdminApi.deleteEmployee(row.id);
+      $q.notify({ type: 'positive', message: `${row.name} deleted` });
+      load();
+    } catch (err) {
+      $q.notify({ type: 'negative', message: err.response?.data?.error ?? 'Delete failed' });
+    }
+  });
+}
+
+onMounted(load);
 </script>

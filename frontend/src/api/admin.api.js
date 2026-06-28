@@ -7,6 +7,7 @@ export const AdminApi = {
   getAttendance: (date)     => client.get('/admin/attendance', { params: { date } }),
   getRecord:     (id)       => client.get(`/admin/attendance/${id}`),
   getEmployees:  ()         => client.get('/admin/employees'),
+  deleteEmployee:(id)       => client.delete(`/admin/employees/${id}`),
   getGeofence:   ()         => client.get('/admin/geofence'),
   photoUrl:      (filename) => `${BASE_URL}/api/v1/admin/photo/${filename}`,
 };

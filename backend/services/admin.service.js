@@ -38,4 +38,9 @@ function getGeofenceConfig() {
   return { lat: config.geofence.lat, lng: config.geofence.lng, radius: config.geofence.radius };
 }
 
-module.exports = { getStats, getAttendance, getAttendanceRecord, getEmployees, getGeofenceConfig };
+function deleteEmployee(id) {
+  const result = UserRepository.deleteById(id);
+  return { deleted: result.changes > 0 };
+}
+
+module.exports = { getStats, getAttendance, getAttendanceRecord, getEmployees, getGeofenceConfig, deleteEmployee };

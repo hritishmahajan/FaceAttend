@@ -1,6 +1,10 @@
 <template>
   <q-page class="q-pa-md">
-    <div class="text-h6 q-mb-md">Admin Dashboard – {{ todayLabel }}</div>
+    <div class="row items-center q-mb-md">
+      <div class="text-h6">Admin Dashboard – {{ todayLabel }}</div>
+      <q-space />
+      <q-btn outline color="primary" icon="refresh" label="Refresh" :loading="loading" @click="load" />
+    </div>
 
     <div class="row q-gutter-md q-mb-lg">
       <q-card class="col" v-for="s in statCards" :key="s.label">
@@ -60,7 +64,8 @@ function calcShift(i, o) {
   return `${Math.floor(ms/3_600_000)}h ${Math.floor((ms%3_600_000)/60_000)}m`;
 }
 
-onMounted(async () => {
+async function load() {
+  loading.value = true;
   try {
     const today = new Date().toISOString().slice(0, 10);
     const [s, a] = await Promise.all([AdminApi.getStats(today), AdminApi.getAttendance(today)]);
@@ -69,5 +74,7 @@ onMounted(async () => {
   } finally {
     loading.value = false;
   }
-});
+}
+
+onMounted(load);
 </script>
