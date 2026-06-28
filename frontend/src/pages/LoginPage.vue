@@ -27,6 +27,7 @@
         <div>
           <div class="lab">Password</div>
           <q-input v-model="form.password" :type="showPwd ? 'text' : 'password'"
+            placeholder="Daal dijiye naahhh! Podinaaaah"
             outlined dense :rules="[v => !!v || 'Required']">
             <template #append>
               <q-icon :name="showPwd ? 'visibility_off' : 'visibility'" class="cursor-pointer" @click="showPwd = !showPwd" />
