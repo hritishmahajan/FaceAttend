@@ -103,6 +103,37 @@
         </q-card-actions>
       </q-card>
     </q-dialog>
+
+    <!-- Punch success -->
+    <q-dialog v-model="successOpen">
+      <q-card class="kolam-light q-pa-lg text-center" style="width:340px;max-width:92vw">
+        <div class="column flex-center">
+          <div class="flex flex-center" style="width:92px;height:92px;border-radius:50%;background:#2F7D4F;box-shadow:0 16px 30px -12px rgba(47,125,79,.7)">
+            <q-icon name="check" color="white" size="46px" />
+          </div>
+        </div>
+        <div class="disp q-mt-md" style="font-size:28px;color:#1E2A6E">
+          Punched {{ success?.type === 'in' ? 'in' : 'out' }}!
+        </div>
+        <div class="dev" style="font-size:17px">हाज़िरी लग गई ✓</div>
+        <div style="font-weight:800;font-size:34px;color:#1E2A6E;margin-top:10px">{{ success?.time }}</div>
+        <div style="font-size:13px;color:#8A7D66">{{ todayLabel }}</div>
+
+        <div class="dmag-card q-pa-sm q-mt-md row items-center q-gutter-sm no-wrap text-left">
+          <q-img v-if="success?.snapshot" :src="success.snapshot" style="width:48px;height:54px;border-radius:8px;flex:0 0 auto" fit="cover" />
+          <div class="col">
+            <div class="text-weight-bold" style="font-size:13px;color:#1E2A6E">Punch photo saved</div>
+            <div class="row q-gutter-xs q-mt-xs">
+              <q-chip dense size="sm" style="background:#EAF3EE;color:#2F7D4F">{{ success?.match }}% match</q-chip>
+              <q-chip dense size="sm" style="background:#EEF0FA;color:#1E2A6E">In geofence</q-chip>
+            </div>
+          </div>
+        </div>
+
+        <q-btn label="Done" color="primary" unelevated class="full-width q-mt-md"
+          style="height:48px;border-radius:14px;font-weight:700" v-close-popup />
+      </q-card>
+    </q-dialog>
   </q-page>
 </template>
 
@@ -128,6 +159,8 @@ const canScan = computed(() =>
 );
 const scanOpen  = ref(false);
 const scanType  = ref('in');
+const successOpen = ref(false);
+const success     = ref(null);
 
 const todayLabel = new Date().toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 const timeOfDay  = computed(() => {
@@ -151,15 +184,22 @@ function openScan(type) {
   scanOpen.value = true;
 }
 
-async function onMatch({ snapshot }) {
+async function onMatch({ snapshot, distance }) {
   scanOpen.value = false;
   const result = await punch(scanType.value, {
     lat: geoPosition.value.lat,
     lng: geoPosition.value.lng,
     snapshot,
   });
-  if (!result.success && result.outsideGeofence) {
-    // Force re-check location — server confirmed we're outside
+  if (result.success) {
+    success.value = {
+      type: scanType.value,
+      time: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
+      snapshot,
+      match: Math.round((1 - (distance ?? 0)) * 100),
+    };
+    successOpen.value = true;
+  } else if (result.outsideGeofence) {
     refreshGeo();
   }
 }
