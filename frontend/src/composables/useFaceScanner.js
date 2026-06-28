@@ -26,8 +26,23 @@ export function useFaceScanner(options, callbacks) {
   let intervalId = null;
   let matchCount = 0;
 
+  // On Cordova/Android, getUserMedia only works once the native CAMERA runtime
+  // permission is granted. Request it right before opening the camera (doing it
+  // on deviceready is unreliable — that event can fire before listeners attach).
+  function ensureCameraPermission() {
+    return new Promise(resolve => {
+      const perms = window.cordova?.plugins?.permissions;
+      if (!perms) return resolve(); // web/PWA — browser handles the prompt
+      perms.checkPermission(perms.CAMERA, status => {
+        if (status.hasPermission) return resolve();
+        perms.requestPermission(perms.CAMERA, () => resolve(), () => resolve());
+      }, () => resolve());
+    });
+  }
+
   async function start() {
     try {
+      await ensureCameraPermission();
       stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: 'user', width: 640, height: 480 },
         audio: false,
@@ -37,9 +52,11 @@ export function useFaceScanner(options, callbacks) {
         state.value = 'scanning';
         _startDetectionLoop();
       };
-    } catch {
-      status.value = 'Camera access denied';
-      state.value  = 'error';
+    } catch (err) {
+      status.value = err?.name === 'NotAllowedError'
+        ? 'Camera permission denied — enable it in Settings'
+        : 'Camera not available';
+      state.value = 'error';
     }
   }
 
