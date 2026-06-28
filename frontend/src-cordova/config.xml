@@ -24,6 +24,10 @@
 
   <!-- Android -->
   <platform name="android">
+    <config-file target="AndroidManifest.xml" parent="/manifest">
+      <uses-permission android:name="android.permission.CAMERA" />
+      <uses-feature android:name="android.hardware.camera" android:required="false" />
+    </config-file>
     <icon src="resources/icon.png" />
     <icon density="ldpi" src="resources/icon.png" />
     <icon density="mdpi" src="resources/icon.png" />
