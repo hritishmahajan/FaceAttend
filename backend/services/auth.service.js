@@ -23,8 +23,8 @@ async function issueOtp(userId, email, name) {
     otp,
     expiresAt: new Date(Date.now() + config.otp.ttlMs).toISOString(),
   });
-  await EmailService.sendOtp(email, otp, name);
-  return otp;
+  const emailed = await EmailService.sendOtp(email, otp, name);
+  return { otp, emailed };
 }
 
 async function register({ name, email, phone, password }) {
@@ -35,8 +35,8 @@ async function register({ name, email, phone, password }) {
   const id = uuidv4();
   UserRepository.create({ id, name, email, phone, password: hash });
 
-  const otp = await issueOtp(id, email, name);
-  return { userId: id, ...(config.env !== 'production' && { otp }) };
+  const { otp, emailed } = await issueOtp(id, email, name);
+  return { userId: id, emailed, ...(!emailed && { otp }) };
 }
 
 async function login({ email, password }) {
@@ -71,15 +71,16 @@ async function resendOtp(userId) {
   const user = UserRepository.findById(userId);
   if (!user) throw new AppError('User not found', 404);
 
-  const otp = await issueOtp(userId, user.email, user.name);
-  return { ...(config.env !== 'production' && { otp }) };
+  const { otp, emailed } = await issueOtp(userId, user.email, user.name);
+  return { emailed, ...(!emailed && { otp }) };
 }
 
 async function forgotPassword({ email }) {
   const user = UserRepository.findByEmail(email);
   // Always respond the same way so we don't reveal which emails are registered.
-  if (user) await issueOtp(user.id, user.email, user.name);
-  return { message: 'If that email is registered, an OTP has been sent.' };
+  let otp, emailed;
+  if (user) ({ otp, emailed } = await issueOtp(user.id, user.email, user.name));
+  return { message: 'If that email is registered, an OTP has been sent.', ...(user && !emailed && { otp }) };
 }
 
 async function resetPassword({ email, otp, password }) {

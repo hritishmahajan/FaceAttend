@@ -56,7 +56,8 @@ async function register() {
   try {
     const { data } = await AuthApi.register(form);
     auth.pendingUserId = data.userId;
-    $q.notify({ type: 'positive', message: 'Account created! Check your email for OTP.' });
+    auth.lastOtp = data.otp ?? null;
+    $q.notify({ type: 'positive', message: data.otp ? `Email unavailable — your OTP is ${data.otp}` : 'Account created! Check your email for OTP.', timeout: data.otp ? 0 : 4000, closeBtn: !!data.otp });
     router.push({ path: '/verify-otp', query: { mode: 'register' } });
   } catch (err) {
     $q.notify({ type: 'negative', message: err.response?.data?.error ?? 'Registration failed' });

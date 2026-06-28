@@ -27,9 +27,10 @@ function emailConfigured() {
 async function sendOtp(toEmail, otp, name) {
   if (!emailConfigured()) {
     logger.info(`[DEV] OTP for ${toEmail}: ${otp}`);
-    return;
+    return false;
   }
   const firstName = (name || 'Dost').split(' ')[0];
+  try {
   await getTransporter().sendMail({
     from: `"Dekho Mai Aagya! 🙋" <${config.email.user}>`,
     to: toEmail,
@@ -53,6 +54,11 @@ async function sendOtp(toEmail, otp, name) {
     `,
   });
   logger.info(`OTP email sent to ${toEmail}`);
+  return true;
+  } catch (err) {
+    logger.error(`OTP email failed for ${toEmail}: ${err.message}`);
+    return false;
+  }
 }
 
 module.exports = { sendOtp };

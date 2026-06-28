@@ -51,6 +51,7 @@ const countdown = ref(60);
 let timer = null;
 
 onMounted(() => {
+  if (auth.lastOtp) { otp.value = auth.lastOtp; auth.lastOtp = null; }
   otpInput.value?.focus();
   timer = setInterval(() => { if (countdown.value > 0) countdown.value--; }, 1000);
 });

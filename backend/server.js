@@ -11,6 +11,9 @@ const UserRepository = require('./repositories/user.repository');
 
 const app = express();
 
+// Render (and most hosts) put the app behind a proxy — needed for rate-limit + IPs.
+app.set('trust proxy', 1);
+
 // ── Core middleware ────────────────────────────────────────────────────────────
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
