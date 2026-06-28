@@ -34,9 +34,9 @@ jobs:
         working-directory: frontend
         run: npm ci
 
-      - name: Add Cordova Android platform
+      - name: Install Cordova platform deps
         working-directory: frontend/src-cordova
-        run: cordova platform add android@latest || true
+        run: npm install
 
       - name: Build debug APK
         working-directory: frontend
