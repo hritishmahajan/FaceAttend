@@ -42,12 +42,13 @@ jobs:
         working-directory: frontend
         env:
           VITE_API_URL: ${{ secrets.VITE_API_URL }}
-        run: quasar build -m cordova -T android
+        run: quasar build -m cordova -T android --debug
 
       - name: Locate APK
         id: apk
         run: |
-          APK=$(find frontend/src-cordova/platforms/android -name "*-debug.apk" | head -1)
+          APK=$(find frontend/src-cordova/platforms/android -name "*.apk" | head -1)
+          if [ -z "$APK" ]; then echo "No APK found"; exit 1; fi
           echo "path=$APK" >> "$GITHUB_OUTPUT"
           echo "Found APK: $APK"
 
