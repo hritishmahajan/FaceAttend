@@ -11,7 +11,10 @@ const SCAN_INTERVAL_MS = 300;
  * @param {{ onDetected, onMatch, onNoMatch }} callbacks
  */
 export function useFaceScanner(options, callbacks) {
-  const { mode, storedDescriptor = null, threshold = 0.5 } = options;
+  const { mode, storedDescriptor = null, threshold = 0.45 } = options;
+  // A valid face-api descriptor is exactly 128 floats. Anything else (null,
+  // empty array, corrupt) must NOT be treated as a match-anything wildcard.
+  const validStored = Array.isArray(storedDescriptor) && storedDescriptor.length === 128;
   const { onDetected, onMatch, onNoMatch } = callbacks;
 
   const videoEl  = ref(null);
@@ -98,7 +101,12 @@ export function useFaceScanner(options, callbacks) {
         return;
       }
 
-      if (mode === 'verify' && storedDescriptor) {
+      if (mode === 'verify') {
+        if (!validStored) {
+          status.value = 'No valid registered face — please re-register';
+          state.value  = 'error';
+          return;
+        }
         const distance = faceapi.euclideanDistance(
           new Float32Array(storedDescriptor),
           new Float32Array(descriptor)
