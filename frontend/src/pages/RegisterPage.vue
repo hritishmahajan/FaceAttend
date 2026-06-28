@@ -1,13 +1,15 @@
 <template>
-  <q-page class="flex flex-center bg-grey-2" style="min-height:100vh">
-    <q-card style="width:380px;max-width:95vw" class="q-pa-md shadow-4">
-      <q-card-section class="text-center">
-        <q-icon name="person_add" size="48px" color="primary" />
-        <div class="text-h6 text-weight-bold q-mt-sm">Create Account</div>
-      </q-card-section>
+  <q-page class="kolam-light column flex-center q-py-lg" style="min-height:100vh">
+    <BlockPrintBand class="absolute-top" />
 
-      <q-card-section>
-        <q-form @submit.prevent="register" class="q-gutter-md">
+    <div class="dmag-card q-pa-lg q-mt-md" style="width:360px;max-width:92vw">
+      <div class="text-center">
+        <q-icon name="person_add" size="40px" color="primary" />
+        <div class="disp q-mt-sm" style="font-size:24px;color:#1E2A6E">Create account</div>
+        <div style="font-size:14px;color:#8A7D66;margin-top:4px">Set up once, then punch in with a glance.</div>
+      </div>
+
+      <q-form @submit.prevent="register" class="q-gutter-md q-mt-md">
           <q-input v-model="form.name" label="Full Name" outlined dense :rules="[v => !!v || 'Required']">
             <template #prepend><q-icon name="person" /></template>
           </q-input>
@@ -26,18 +28,19 @@
               <q-icon :name="showPwd ? 'visibility_off' : 'visibility'" class="cursor-pointer" @click="showPwd = !showPwd" />
             </template>
           </q-input>
-          <q-btn type="submit" label="Register" color="primary" class="full-width" :loading="loading" />
+          <q-btn type="submit" label="Register" color="primary" unelevated class="full-width"
+            style="height:52px;border-radius:14px;font-weight:700" :loading="loading" />
         </q-form>
-      </q-card-section>
 
-      <q-card-section class="text-center q-pt-none">
-        <router-link to="/login" class="text-primary">Already have an account? Login</router-link>
-      </q-card-section>
-    </q-card>
+        <div class="text-center q-mt-md">
+          <router-link to="/login" style="color:#1E2A6E">Already have an account? Login</router-link>
+        </div>
+    </div>
   </q-page>
 </template>
 
 <script setup>
+import BlockPrintBand from 'src/components/BlockPrintBand.vue';
 import { ref, reactive } from 'vue';
 import { useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';

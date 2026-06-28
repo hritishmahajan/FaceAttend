@@ -1,39 +1,45 @@
 <template>
-  <q-page class="flex flex-center bg-grey-2" style="min-height:100vh">
-    <q-card style="width:360px;max-width:95vw" class="q-pa-md shadow-4">
-      <q-card-section class="text-center">
-        <q-icon name="verified_user" size="48px" color="primary" />
-        <div class="text-h6 text-weight-bold q-mt-sm">Verify OTP</div>
-        <div class="text-caption text-grey">Enter the 6-digit code sent to your email</div>
-      </q-card-section>
+  <q-page class="kolam-light column flex-center" style="min-height:100vh">
+    <BlockPrintBand class="absolute-top" />
 
-      <q-card-section>
-        <q-input
-          ref="otpInput"
-          v-model="otp"
-          mask="######"
-          unmasked-value
-          inputmode="numeric"
-          outlined
-          class="q-mb-lg"
-          input-style="text-align:center;font-size:1.8rem;font-weight:bold;letter-spacing:0.5rem"
-          placeholder="------"
-          @keyup.enter="verify"
-        />
+    <div class="dmag-card q-pa-lg" style="width:340px;max-width:92vw">
+      <div class="text-center">
+        <q-icon name="verified_user" size="40px" color="primary" />
+        <div class="disp q-mt-sm" style="font-size:25px;color:#1E2A6E">Enter the code</div>
+        <div style="font-size:14px;color:#8A7D66;margin-top:4px">We sent a 6-digit code to your email.</div>
+      </div>
 
-        <q-btn label="Verify" color="primary" class="full-width q-mb-sm" :loading="loading" @click="verify" />
-        <q-btn label="Resend OTP" flat color="primary" class="full-width"
-          :loading="resending" :disable="countdown > 0" @click="resend" />
-        <div class="text-center text-caption text-grey q-mt-xs">
-          {{ countdown > 0 ? `Resend in ${countdown}s` : 'You can resend now' }}
-        </div>
-      </q-card-section>
-    </q-card>
+      <q-input
+        ref="otpInput"
+        v-model="otp"
+        mask="######"
+        unmasked-value
+        inputmode="numeric"
+        outlined
+        class="q-my-lg"
+        input-style="text-align:center;font-size:1.8rem;font-weight:bold;letter-spacing:0.5rem;color:#1E2A6E"
+        placeholder="------"
+        @keyup.enter="verify"
+      />
+
+      <q-btn label="Verify & continue" color="primary" unelevated class="full-width q-mb-sm"
+        style="height:52px;border-radius:14px;font-weight:700" :loading="loading" @click="verify" />
+      <q-btn label="Resend OTP" flat color="primary" class="full-width"
+        :loading="resending" :disable="countdown > 0" @click="resend" />
+      <div class="text-center text-caption q-mt-xs" style="color:#A08C66">
+        {{ countdown > 0 ? `Resend in ${countdown}s` : 'You can resend now' }}
+      </div>
+    </div>
+
+    <div class="trust-line q-mt-lg">
+      <q-icon name="shield" color="positive" size="14px" />Code expires in 10 minutes · single use
+    </div>
   </q-page>
 </template>
 
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue';
+import BlockPrintBand from 'src/components/BlockPrintBand.vue';
 import { useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
 import { AuthApi } from 'src/api/auth.api';

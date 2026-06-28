@@ -1,14 +1,14 @@
 <template>
-  <q-page class="flex flex-center bg-grey-2 q-pa-md">
-    <q-card style="width:420px;max-width:100%" class="shadow-4">
+  <q-page class="kolam-dark flex flex-center q-pa-md">
+    <q-card style="width:420px;max-width:100%;background:#1C1626;color:#FBF3E2" class="shadow-4">
       <q-card-section class="text-center">
-        <q-icon name="face_retouching_natural" size="48px" color="primary" />
-        <div class="text-h6 text-weight-bold q-mt-sm">Register Your Face</div>
-        <div class="text-caption text-grey">One-time setup. Look directly at the camera.</div>
+        <q-icon name="face_retouching_natural" size="44px" color="secondary" />
+        <div class="disp q-mt-sm" style="font-size:24px;color:#FBF3E2">Register your face</div>
+        <div class="text-caption" style="color:#C3B8A0">One-time setup, so each punch is just a glance.</div>
       </q-card-section>
 
       <q-card-section>
-        <q-stepper v-model="step" color="primary" animated flat>
+        <q-stepper v-model="step" color="secondary" animated flat dark style="background:transparent">
           <q-step :name="1" title="Prepare" icon="info" :done="step > 1">
             <ul class="text-body2 q-mb-md">
               <li>Ensure good, even lighting</li>
@@ -16,7 +16,11 @@
               <li>Look directly at the camera</li>
               <li>Keep a neutral expression</li>
             </ul>
-            <q-btn label="Start Camera" color="primary" @click="step = 2" />
+            <div class="trust-line q-mb-md" style="color:#C3B8A0;justify-content:flex-start">
+              <q-icon name="shield" color="secondary" size="16px" />Only a 128-number descriptor is stored — never your photo.
+            </div>
+            <q-btn label="Start camera" color="secondary" text-color="primary" unelevated
+              style="font-weight:700" @click="step = 2" />
           </q-step>
 
           <q-step :name="2" title="Scan Face" icon="videocam" :done="step > 2">
@@ -30,9 +34,12 @@
             </div>
             <q-btn
               v-if="detectedDescriptor"
-              label="Capture & Save"
-              color="positive"
+              label="Capture face"
+              color="secondary"
+              text-color="primary"
+              unelevated
               class="full-width q-mt-md"
+              style="height:52px;border-radius:14px;font-weight:700"
               :loading="saving"
               @click="save"
             />

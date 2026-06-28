@@ -1,10 +1,11 @@
 <template>
-  <q-page class="flex flex-center bg-grey-2" style="min-height:100vh">
-    <q-card style="width:360px;max-width:95vw" class="q-pa-md shadow-4">
+  <q-page class="kolam-light column flex-center" style="min-height:100vh">
+    <BlockPrintBand class="absolute-top" />
+    <q-card style="width:360px;max-width:92vw;background:#FFFDF7" class="q-pa-md shadow-4">
       <q-card-section class="text-center">
-        <q-icon name="lock_reset" size="48px" color="primary" />
-        <div class="text-h6 text-weight-bold q-mt-sm">Reset password</div>
-        <div class="text-caption text-grey">
+        <q-icon name="lock_reset" size="44px" color="primary" />
+        <div class="disp q-mt-sm" style="font-size:22px;color:#1E2A6E">Reset password</div>
+        <div class="text-caption" style="color:#8A7D66">
           {{ step === 1 ? 'Enter your email to get an OTP' : 'Enter the OTP and your new password' }}
         </div>
       </q-card-section>
@@ -41,6 +42,7 @@
 
 <script setup>
 import { ref } from 'vue';
+import BlockPrintBand from 'src/components/BlockPrintBand.vue';
 import { useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
 import { AuthApi } from 'src/api/auth.api';
