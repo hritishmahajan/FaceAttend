@@ -29,37 +29,68 @@ function emailConfigured() {
   return user && pass && !user.includes('your_email') && !pass.includes('your_app_password');
 }
 
+function emailHtml(firstName, otp) {
+  return `
+    <div style="font-family:sans-serif;max-width:440px;margin:auto;border:1px solid #eee;border-radius:14px;overflow:hidden">
+      <div style="background:#0C447C;color:#fff;padding:20px 24px">
+        <div style="font-size:20px;font-weight:600">🙋 Dekho Mai Aagya!</div>
+        <div style="font-size:13px;color:#B5D4F4">Haaziri lagao, jhanjhat bhagao</div>
+      </div>
+      <div style="padding:24px">
+        <p style="font-size:16px;margin:0 0 6px">Arre <b>${firstName}</b>! 👋</p>
+        <p style="color:#444;margin:0 0 18px">Attendance lagani hai? Pehle ye secret code daalo, phir kaho zor se — <i>"Dekho Mai Aagya!"</i> 😎</p>
+        <div style="background:#E6F1FB;border-radius:10px;text-align:center;padding:18px 0;margin-bottom:18px">
+          <span style="font-size:2.4rem;letter-spacing:10px;font-weight:bold;color:#0C447C">${otp}</span>
+        </div>
+        <p style="color:#888;font-size:13px;margin:0">Ye code 10 minute me gayab ho jayega ⏳. Kisi ko mat batana, warna woh tumhari jagah "aa jayega" 🤫</p>
+      </div>
+      <div style="background:#f7f7f5;color:#999;font-size:11px;text-align:center;padding:12px">Dekho Mai Aagya! · attendance ka baadshah 👑</div>
+    </div>
+  `;
+}
+
+// Brevo HTTP API — sends over HTTPS (port 443), so it works on hosts that
+// block SMTP ports (Render free tier). Best path for real inbox delivery.
+async function sendViaBrevo(toEmail, otp, firstName, subject) {
+  const res = await fetch('https://api.brevo.com/v3/smtp/email', {
+    method: 'POST',
+    headers: { 'api-key': config.email.brevoKey, 'content-type': 'application/json', accept: 'application/json' },
+    body: JSON.stringify({
+      sender: { email: config.email.sender, name: config.email.senderName },
+      to: [{ email: toEmail, name: firstName }],
+      subject,
+      htmlContent: emailHtml(firstName, otp),
+    }),
+  });
+  if (!res.ok) throw new Error(`Brevo ${res.status}: ${await res.text()}`);
+}
+
 async function sendOtp(toEmail, otp, name) {
+  const firstName = (name || 'Dost').split(' ')[0];
+  const subject = `${firstName}, OTP daalo aur bolo "Dekho Mai Aagya!" 🎯`;
+
+  if (config.email.brevoKey && config.email.sender) {
+    try {
+      await sendViaBrevo(toEmail, otp, firstName, subject);
+      logger.info(`OTP email sent (Brevo) to ${toEmail}`);
+      return true;
+    } catch (err) {
+      logger.error(`Brevo send failed for ${toEmail}: ${err.message}`);
+      return false;
+    }
+  }
+
   if (!emailConfigured()) {
     logger.info(`[DEV] OTP for ${toEmail}: ${otp}`);
     return false;
   }
-  const firstName = (name || 'Dost').split(' ')[0];
   try {
-  await getTransporter().sendMail({
-    from: `"Dekho Mai Aagya! 🙋" <${config.email.user}>`,
-    to: toEmail,
-    subject: `${firstName}, OTP daalo aur bolo "Dekho Mai Aagya!" 🎯`,
-    html: `
-      <div style="font-family:sans-serif;max-width:440px;margin:auto;border:1px solid #eee;border-radius:14px;overflow:hidden">
-        <div style="background:#0C447C;color:#fff;padding:20px 24px">
-          <div style="font-size:20px;font-weight:600">🙋 Dekho Mai Aagya!</div>
-          <div style="font-size:13px;color:#B5D4F4">Haaziri lagao, jhanjhat bhagao</div>
-        </div>
-        <div style="padding:24px">
-          <p style="font-size:16px;margin:0 0 6px">Arre <b>${firstName}</b>! 👋</p>
-          <p style="color:#444;margin:0 0 18px">Attendance lagani hai? Pehle ye secret code daalo, phir kaho zor se — <i>"Dekho Mai Aagya!"</i> 😎</p>
-          <div style="background:#E6F1FB;border-radius:10px;text-align:center;padding:18px 0;margin-bottom:18px">
-            <span style="font-size:2.4rem;letter-spacing:10px;font-weight:bold;color:#0C447C">${otp}</span>
-          </div>
-          <p style="color:#888;font-size:13px;margin:0">Ye code 10 minute me gayab ho jayega ⏳. Kisi ko mat batana, warna woh tumhari jagah "aa jayega" 🤫</p>
-        </div>
-        <div style="background:#f7f7f5;color:#999;font-size:11px;text-align:center;padding:12px">Dekho Mai Aagya! · attendance ka baadshah 👑</div>
-      </div>
-    `,
-  });
-  logger.info(`OTP email sent to ${toEmail}`);
-  return true;
+    await getTransporter().sendMail({
+      from: `"Dekho Mai Aagya! 🙋" <${config.email.user}>`,
+      to: toEmail, subject, html: emailHtml(firstName, otp),
+    });
+    logger.info(`OTP email sent (SMTP) to ${toEmail}`);
+    return true;
   } catch (err) {
     logger.error(`OTP email failed for ${toEmail}: ${err.message}`);
     return false;

@@ -14,6 +14,10 @@ const config = {
     port: parseInt(process.env.EMAIL_PORT ?? '587', 10),
     user: process.env.EMAIL_USER ?? '',
     pass: process.env.EMAIL_PASS ?? '',
+    // Brevo HTTP API (works on hosts that block SMTP, e.g. Render free tier)
+    brevoKey: process.env.BREVO_API_KEY ?? '',
+    sender: process.env.EMAIL_SENDER ?? process.env.EMAIL_USER ?? '',
+    senderName: process.env.EMAIL_SENDER_NAME ?? 'Dekho Mai Aagya!',
   },
 
   geofence: {
