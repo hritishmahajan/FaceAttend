@@ -58,8 +58,13 @@ const loading = ref(false);
 async function requestOtp() {
   loading.value = true;
   try {
-    await AuthApi.forgotPassword({ email: email.value });
-    $q.notify({ type: 'positive', message: 'If that email is registered, an OTP has been sent.' });
+    const { data } = await AuthApi.forgotPassword({ email: email.value });
+    if (data.otp) {
+      otp.value = data.otp;
+      $q.notify({ type: 'positive', message: `Email unavailable — your OTP is ${data.otp}`, timeout: 0, closeBtn: true });
+    } else {
+      $q.notify({ type: 'positive', message: 'If that email is registered, an OTP has been sent.' });
+    }
     step.value = 2;
   } catch (err) {
     $q.notify({ type: 'negative', message: err.response?.data?.error ?? 'Something went wrong' });

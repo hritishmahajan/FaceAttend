@@ -79,9 +79,14 @@ async function resend() {
   if (countdown.value > 0) return;
   resending.value = true;
   try {
-    await AuthApi.resendOtp({ userId: auth.pendingUserId });
+    const { data } = await AuthApi.resendOtp({ userId: auth.pendingUserId });
     countdown.value = 60;
-    $q.notify({ type: 'positive', message: 'OTP resent to your email' });
+    if (data.otp) {
+      otp.value = data.otp;
+      $q.notify({ type: 'positive', message: `Email unavailable — your OTP is ${data.otp}`, timeout: 0, closeBtn: true });
+    } else {
+      $q.notify({ type: 'positive', message: 'OTP resent to your email' });
+    }
   } catch {
     $q.notify({ type: 'negative', message: 'Failed to resend OTP' });
   } finally {
