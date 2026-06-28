@@ -28,7 +28,7 @@ jobs:
         uses: android-actions/setup-android@v3
 
       - name: Install global CLIs
-        run: npm install -g @quasar/cli cordova
+        run: npm install -g @quasar/cli cordova cordova-res
 
       - name: Install frontend deps
         working-directory: frontend
@@ -37,6 +37,12 @@ jobs:
       - name: Install Cordova platform deps
         working-directory: frontend/src-cordova
         run: npm install
+
+      - name: Add Android platform + generate icons
+        working-directory: frontend/src-cordova
+        run: |
+          cordova platform add android
+          cordova-res android --skip-config --copy
 
       - name: Build debug APK
         working-directory: frontend

@@ -45,15 +45,15 @@
     </q-card>
 
     <!-- Scan-to-punch lotus circle -->
-    <div class="column items-center q-mt-lg">
+    <div class="column items-center q-mt-md">
       <template v-if="!attendance.isPunchedOut">
         <div
           :class="{ 'cursor-pointer': canScan }"
-          :style="`position:relative;width:212px;height:212px;display:flex;align-items:center;justify-content:center;${canScan ? '' : 'opacity:.5'}`"
+          :style="`position:relative;width:184px;height:184px;display:flex;align-items:center;justify-content:center;${canScan ? '' : 'opacity:.5'}`"
           @click="canScan && openScan(attendance.isPunchedIn ? 'out' : 'in')"
         >
           <LotusScanFrame />
-          <div class="column flex-center" style="width:170px;height:170px;border-radius:50%;background:#FFFDF7;border:2px solid #1E2A6E;box-shadow:0 16px 34px -16px rgba(30,42,110,.5);text-align:center">
+          <div class="column flex-center" style="width:148px;height:148px;border-radius:50%;background:#FFFDF7;border:2px solid #1E2A6E;box-shadow:0 16px 34px -16px rgba(30,42,110,.5);text-align:center">
             <q-icon name="center_focus_strong" size="34px" color="primary" />
             <div class="disp" style="font-size:18px;color:#1E2A6E;margin-top:6px">
               Scan to punch {{ attendance.isPunchedIn ? 'out' : 'in' }}

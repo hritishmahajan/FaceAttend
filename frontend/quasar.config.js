@@ -4,7 +4,7 @@ export default configure(function (ctx) {
   return {
     eslint: { warnings: true, errors: true },
 
-    boot: ['pinia', 'axios', 'face-api'],
+    boot: ['pinia', 'axios', 'face-api', 'cordova-permissions'],
 
     css: ['app.scss'],
 
