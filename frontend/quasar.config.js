@@ -16,11 +16,12 @@ export default configure(function (ctx) {
         node: 'node20',
       },
       vueRouterMode: 'hash',
-      // Served from a project subpath on GitHub Pages (/FaceAttend/) in prod.
-      publicPath: ctx.prod ? '/FaceAttend/' : '/',
+      // GitHub Pages subpath only for the SPA web build. Cordova/dev load from
+      // file:// or root, so they must use a relative/empty base.
+      publicPath: ctx.prod && ctx.mode.spa ? '/FaceAttend/' : '',
       env: {
         API_URL: process.env.VITE_API_URL || process.env.API_URL || 'http://localhost:3000',
-        APP_BASE: ctx.prod ? '/FaceAttend' : '',
+        APP_BASE: ctx.prod && ctx.mode.spa ? '/FaceAttend' : '',
       },
     },
 
