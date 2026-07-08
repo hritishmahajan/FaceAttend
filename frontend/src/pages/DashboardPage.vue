@@ -2,7 +2,7 @@
   <q-page class="kolam-light q-pa-md">
     <div class="q-mb-md">
       <div style="font-size:14px;color:#8A7D66;font-weight:600">{{ todayLabel }}</div>
-      <div class="disp" style="font-size:26px;color:#1E2A6E">Namaste, {{ auth.user?.name }}</div>
+      <div class="disp" style="font-size:26px;color:#1E2A6E">Welcome, {{ auth.user?.name }}</div>
     </div>
 
     <!-- Geofence card -->
@@ -58,7 +58,7 @@
             <div class="disp" style="font-size:18px;color:#1E2A6E;margin-top:6px">
               Scan to punch {{ attendance.isPunchedIn ? 'out' : 'in' }}
             </div>
-            <div style="font-size:12px;color:#A08C66;margin-top:2px">Chehra dikhao — bas ek tap</div>
+            <div style="font-size:12px;color:#A08C66;margin-top:2px">Tap to scan your face</div>
           </div>
         </div>
         <div class="trust-line q-mt-md">
@@ -115,7 +115,7 @@
         <div class="disp q-mt-md" style="font-size:28px;color:#1E2A6E">
           Punched {{ success?.type === 'in' ? 'in' : 'out' }}!
         </div>
-        <div class="dev" style="font-size:17px">हाज़िरी लग गई ✓</div>
+        <div style="font-size:15px;color:#2F7D4F">Attendance recorded successfully</div>
         <div style="font-weight:800;font-size:34px;color:#1E2A6E;margin-top:10px">{{ success?.time }}</div>
         <div style="font-size:13px;color:#8A7D66">{{ todayLabel }}</div>
 

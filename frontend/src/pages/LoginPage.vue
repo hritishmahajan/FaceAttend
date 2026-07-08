@@ -10,7 +10,7 @@
         </g>
       </svg>
       <div class="brandname q-mt-sm" style="font-size:25px;color:#1E2A6E">Dekho Mai Aagya!</div>
-      <div class="dev" style="font-size:15px;margin-top:6px">देखो मैं आ गया · हाज़िरी, अब आसान</div>
+      <div style="font-size:14px;margin-top:6px;color:#8A7D66">Facial attendance, geofenced and secure</div>
     </div>
 
     <div class="dmag-card q-mt-lg q-pa-lg" style="width:340px;max-width:92vw">
@@ -21,13 +21,11 @@
         <div>
           <div class="lab">Work email</div>
           <q-input v-model="form.email" type="email" outlined dense
-            placeholder="osc@frosh.in"
             :rules="[v => !!v || 'Required', v => /.+@.+/.test(v) || 'Enter a valid work email']" />
         </div>
         <div>
           <div class="lab">Password</div>
           <q-input v-model="form.password" :type="showPwd ? 'text' : 'password'"
-            placeholder="Daal dijiye naahhh! Podinaaaah"
             outlined dense :rules="[v => !!v || 'Required']">
             <template #append>
               <q-icon :name="showPwd ? 'visibility_off' : 'visibility'" class="cursor-pointer" @click="showPwd = !showPwd" />
