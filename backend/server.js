@@ -48,15 +48,17 @@ app.get('/health', (_req, res) => res.json({ status: 'ok', version: 'v1', time: 
 app.use(errorHandler);
 
 // ── Bootstrap admin account ───────────────────────────────────────────────────
+const ADMIN_PHONE = '0000000000';
 async function seedAdmin() {
-  const existing = UserRepository.findByEmail(config.admin.email);
-  if (existing) return;
+  // Idempotent: skip if the admin email OR the bootstrap phone already exists
+  // (the DB now persists across restarts, so re-seeding would violate UNIQUE).
+  if (UserRepository.findByEmailOrPhone(config.admin.email, ADMIN_PHONE)) return;
   const hash = await bcrypt.hash(config.admin.password, 10);
   UserRepository.createAdmin({
     id: uuidv4(),
     name: 'Admin',
     email: config.admin.email,
-    phone: '0000000000',
+    phone: ADMIN_PHONE,
     password: hash,
   });
   logger.info(`Admin seeded: ${config.admin.email}`);
