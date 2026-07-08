@@ -7,17 +7,17 @@
 
     <!-- Geofence card -->
     <div class="dmag-card q-pa-md q-mb-md row items-center no-wrap"
-      :style="locationReady ? '' : 'background:#FBEEEC;border-color:#F0D3CE'">
-      <MandalaGeofence :inside="locationReady" :size="64" class="q-mr-md" />
+      :style="insideGeofence ? '' : 'background:#FBEEEC;border-color:#F0D3CE'">
+      <MandalaGeofence :inside="insideGeofence" :size="64" class="q-mr-md" />
       <div class="col">
         <div class="row items-center q-gutter-xs">
-          <span :style="`width:8px;height:8px;border-radius:50%;background:${locationReady ? '#2F7D4F' : '#C0392B'}`" />
-          <span class="text-weight-bold" :style="`color:${locationReady ? '#1E2A6E' : '#C0392B'}`">
-            {{ locationReady ? 'Inside geofence' : (geoError ?? 'Acquiring location…') }}
+          <span :style="`width:8px;height:8px;border-radius:50%;background:${insideGeofence ? '#2F7D4F' : '#C0392B'}`" />
+          <span class="text-weight-bold" :style="`color:${insideGeofence ? '#1E2A6E' : '#C0392B'}`">
+            {{ geoStatusLabel }}
           </span>
         </div>
         <div v-if="geoPosition" class="mono" style="font-size:12px;color:#8A7D66;margin-top:4px">
-          {{ geoPosition.lat.toFixed(4) }}, {{ geoPosition.lng.toFixed(4) }}
+          {{ geoPosition.lat.toFixed(4) }}, {{ geoPosition.lng.toFixed(4) }}<span v-if="distanceM !== null"> · {{ distanceM }} m away</span>
         </div>
       </div>
       <q-btn flat round dense icon="refresh" color="primary" :loading="geoLoading" @click="refreshGeo" />
@@ -146,6 +146,7 @@ import { useAttendance }      from 'src/composables/useAttendance';
 import FaceScanner            from 'src/components/FaceScanner.vue';
 import MandalaGeofence        from 'src/components/MandalaGeofence.vue';
 import LotusScanFrame         from 'src/components/LotusScanFrame.vue';
+import client                 from 'src/api/client';
 
 const auth       = useAuthStore();
 const attendance = useAttendanceStore();
@@ -154,8 +155,32 @@ const { punch }  = useAttendance();
 const { position: geoPosition, error: geoError, loading: geoLoading, refresh: refreshGeo, startWatch } = useGeolocation();
 
 const locationReady = computed(() => !!geoPosition.value && !geoError.value);
+
+// Office geofence (fetched from the backend) + real distance check.
+const geofence = ref(null);
+function haversineM(lat1, lng1, lat2, lng2) {
+  const R = 6_371_000, toRad = d => (d * Math.PI) / 180;
+  const dLat = toRad(lat2 - lat1), dLng = toRad(lng2 - lng1);
+  const a = Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+const distanceM = computed(() => {
+  if (!geoPosition.value || !geofence.value) return null;
+  return Math.round(haversineM(geofence.value.lat, geofence.value.lng, geoPosition.value.lat, geoPosition.value.lng));
+});
+const insideGeofence = computed(() =>
+  locationReady.value && geofence.value != null && distanceM.value !== null &&
+  distanceM.value <= geofence.value.radius
+);
+const geoStatusLabel = computed(() => {
+  if (geoError.value) return geoError.value;
+  if (!geoPosition.value) return 'Acquiring location…';
+  if (!geofence.value) return 'Checking geofence…';
+  return insideGeofence.value ? 'Inside geofence' : 'Outside geofence';
+});
 const canScan = computed(() =>
-  locationReady.value && (attendance.isPunchedIn ? !attendance.isPunchedOut : auth.hasFace)
+  insideGeofence.value && (attendance.isPunchedIn ? !attendance.isPunchedOut : auth.hasFace)
 );
 const scanOpen  = ref(false);
 const scanType  = ref('in');
@@ -163,10 +188,6 @@ const successOpen = ref(false);
 const success     = ref(null);
 
 const todayLabel = new Date().toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-const timeOfDay  = computed(() => {
-  const h = new Date().getHours();
-  return h < 12 ? 'Morning' : h < 17 ? 'Afternoon' : 'Evening';
-});
 
 const storedDescriptor = computed(() => {
   const d = auth.user?.face_descriptor;
@@ -204,8 +225,12 @@ async function onMatch({ snapshot, distance }) {
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
   startWatch();
   attendance.fetchToday();
+  try {
+    const { data } = await client.get('/geofence');
+    geofence.value = data;
+  } catch { /* keep advisory; server still enforces on punch */ }
 });
 </script>
