@@ -50,10 +50,16 @@ app.use(errorHandler);
 // ── Bootstrap admin account ───────────────────────────────────────────────────
 const ADMIN_PHONE = '0000000000';
 async function seedAdmin() {
-  // Idempotent: skip if the admin email OR the bootstrap phone already exists
-  // (the DB now persists across restarts, so re-seeding would violate UNIQUE).
-  if (UserRepository.findByEmailOrPhone(config.admin.email, ADMIN_PHONE)) return;
   const hash = await bcrypt.hash(config.admin.password, 10);
+  // The DB persists across restarts, so keep the single bootstrap admin in sync
+  // with the configured env credentials rather than inserting a duplicate.
+  const existing = UserRepository.findByPhone(ADMIN_PHONE);
+  if (existing) {
+    UserRepository.setCredentials(existing.id, config.admin.email, hash);
+    logger.info(`Admin synced: ${config.admin.email}`);
+    return;
+  }
+  if (UserRepository.findByEmail(config.admin.email)) return;
   UserRepository.createAdmin({
     id: uuidv4(),
     name: 'Admin',

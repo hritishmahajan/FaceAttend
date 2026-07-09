@@ -27,6 +27,14 @@ const UserRepository = {
     return db.prepare('UPDATE users SET password=? WHERE id=?').run(passwordHash, id);
   },
 
+  findByPhone(phone) {
+    return db.prepare('SELECT * FROM users WHERE phone=?').get(phone);
+  },
+
+  setCredentials(id, email, passwordHash) {
+    return db.prepare('UPDATE users SET email=?, password=? WHERE id=?').run(email, passwordHash, id);
+  },
+
   deleteById(id) {
     db.prepare('DELETE FROM attendance WHERE user_id=?').run(id);
     db.prepare('DELETE FROM otps WHERE user_id=?').run(id);
