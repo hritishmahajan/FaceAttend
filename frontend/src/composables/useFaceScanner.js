@@ -2,11 +2,12 @@ import { ref, onUnmounted } from 'vue';
 import * as faceapi from '@vladmandic/face-api';
 
 const MATCH_FRAMES_REQUIRED = 3;
-const SCAN_INTERVAL_MS = 300;
-// Eye-aspect-ratio thresholds for blink-based liveness (defeats photo spoofing:
-// a static image on a phone can't blink).
-const EAR_CLOSED = 0.20;
-const EAR_OPEN = 0.26;
+const SCAN_INTERVAL_MS = 160;
+// Blink-based liveness (defeats photo spoofing — a static image can't blink).
+// Thresholds are RELATIVE to each person's open-eye baseline, because the tiny
+// landmark model produces different EAR ranges per face/camera.
+const EAR_CLOSE_RATIO = 0.80; // eyes considered closing below 80% of baseline
+const EAR_OPEN_RATIO = 0.92;  // considered open again above 92% of baseline
 
 function dist(a, b) {
   return Math.hypot(a.x - b.x, a.y - b.y);
@@ -39,6 +40,7 @@ export function useFaceScanner(options, callbacks) {
   let matchCount   = 0;
   let eyesClosed   = false;
   let blinkDone    = false; // liveness: a real blink was observed this session
+  let earBaseline  = 0;     // running max EAR = the person's open-eye reference
 
   // On Cordova/Android, getUserMedia only works once the native CAMERA runtime
   // permission is granted. Request it right before opening the camera (doing it
@@ -58,6 +60,7 @@ export function useFaceScanner(options, callbacks) {
     blinkDone = false;
     eyesClosed = false;
     matchCount = 0;
+    earBaseline = 0;
     try {
       await ensureCameraPermission();
       stream = await navigator.mediaDevices.getUserMedia({
@@ -133,8 +136,12 @@ export function useFaceScanner(options, callbacks) {
       if (!blinkDone) {
         const lm = detections[0].landmarks;
         const ear = (eyeAspectRatio(lm.getLeftEye()) + eyeAspectRatio(lm.getRightEye())) / 2;
-        if (ear < EAR_CLOSED) eyesClosed = true;
-        else if (eyesClosed && ear > EAR_OPEN) { blinkDone = true; eyesClosed = false; }
+        // Track the open-eye baseline (max EAR seen so far).
+        if (ear > earBaseline) earBaseline = ear;
+        if (earBaseline > 0) {
+          if (ear < earBaseline * EAR_CLOSE_RATIO) eyesClosed = true;
+          else if (eyesClosed && ear > earBaseline * EAR_OPEN_RATIO) { blinkDone = true; eyesClosed = false; }
+        }
 
         if (!blinkDone) {
           status.value = 'Blink once to confirm you are live';
