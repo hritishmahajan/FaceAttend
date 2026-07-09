@@ -12,7 +12,7 @@ router.post('/register', authMiddleware, upload.single('photo'), (req, res, next
       return res.status(400).json({ error: 'Descriptor and photo required' });
     }
     FaceService.registerFace(req.user.id, descriptor, req.file.filename);
-    res.json({ message: 'Face registered successfully' });
+    res.json({ message: 'Face registered successfully', face_photo: req.file.filename });
   } catch (err) { next(err); }
 });
 

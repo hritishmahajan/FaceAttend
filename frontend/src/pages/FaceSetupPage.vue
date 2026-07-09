@@ -96,8 +96,9 @@ async function save() {
     const photoBlob = await (await fetch(snapshot)).blob();
     formData.append('photo', photoBlob, 'face.jpg');
 
-    await FaceApi.register(formData);
+    const { data } = await FaceApi.register(formData);
     auth.updateFaceDescriptor(JSON.stringify(detectedDescriptor.value));
+    if (data?.face_photo) auth.setUser({ ...auth.user, face_photo: data.face_photo });
     step.value = 3;
   } catch (err) {
     $q.notify({ type: 'negative', message: err.response?.data?.error ?? 'Face registration failed' });

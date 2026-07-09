@@ -4,7 +4,8 @@
     <q-card class="dmag-card q-mb-md" flat>
       <q-card-section class="row items-center q-gutter-md">
         <q-avatar size="72px" color="primary" text-color="white" font-size="36px">
-          {{ auth.user?.name?.[0]?.toUpperCase() }}
+          <img v-if="facePhotoUrl" :src="facePhotoUrl" alt="Face" />
+          <template v-else>{{ auth.user?.name?.[0]?.toUpperCase() }}</template>
         </q-avatar>
         <div>
           <div class="text-h6">{{ auth.user?.name }}</div>
@@ -22,6 +23,11 @@
 </template>
 
 <script setup>
+import { computed } from 'vue';
 import { useAuthStore } from 'src/stores/auth';
 const auth = useAuthStore();
+const baseUrl = process.env.API_URL || 'http://localhost:3000';
+const facePhotoUrl = computed(() =>
+  auth.user?.face_photo ? `${baseUrl}/uploads/${auth.user.face_photo}` : null
+);
 </script>

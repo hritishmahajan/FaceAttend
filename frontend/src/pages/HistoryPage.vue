@@ -13,14 +13,16 @@
           <q-item-label>{{ fmtDate(rec.date) }}</q-item-label>
           <q-item-label caption>
             In: {{ fmtTime(rec.punch_in) }} &nbsp;|&nbsp; Out: {{ fmtTime(rec.punch_out) }}
-            <span v-if="rec.punch_in && rec.punch_out" class="text-positive q-ml-sm">
-              {{ calcShift(rec.punch_in, rec.punch_out) }}
+            <span v-if="rec.punch_in && rec.punch_out" class="q-ml-sm"
+              :class="isComplete(rec) ? 'text-positive' : 'text-negative'">
+              {{ isComplete(rec) ? calcShift(rec.punch_in, rec.punch_out) : 'Not completed' }}
             </span>
           </q-item-label>
         </q-item-section>
         <q-item-section side>
-          <q-chip dense :color="rec.punch_out ? 'positive' : 'orange'" text-color="white" size="sm">
-            {{ rec.punch_out ? 'Complete' : 'Partial' }}
+          <q-chip dense size="sm" text-color="white"
+            :color="!rec.punch_out ? 'orange' : (isComplete(rec) ? 'positive' : 'negative')">
+            {{ !rec.punch_out ? 'Partial' : (isComplete(rec) ? 'Complete' : 'Not completed') }}
           </q-chip>
         </q-item-section>
       </q-item>
@@ -47,8 +49,13 @@ function fmtTime(iso) {
   if (!iso) return '—';
   return new Date(iso).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
 }
+function isComplete(rec) {
+  if (!rec.punch_in || !rec.punch_out) return false;
+  return (new Date(rec.punch_out) - new Date(rec.punch_in)) >= 60_000;
+}
 function calcShift(in_, out_) {
   const ms = new Date(out_) - new Date(in_);
-  return `${Math.floor(ms/3_600_000)}h ${Math.floor((ms%3_600_000)/60_000)}m`;
+  const s = Math.floor((ms % 60_000) / 1_000);
+  return `${Math.floor(ms/3_600_000)}h ${Math.floor((ms%3_600_000)/60_000)}m ${s}s`;
 }
 </script>

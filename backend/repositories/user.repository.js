@@ -46,7 +46,7 @@ const UserRepository = {
   },
 
   publicFields(id) {
-    return db.prepare('SELECT id,name,email,role,face_descriptor FROM users WHERE id=?').get(id);
+    return db.prepare('SELECT id,name,email,role,face_descriptor,face_photo FROM users WHERE id=?').get(id);
   },
 
   allEmployees() {
