@@ -12,8 +12,13 @@
     <!-- shift duration card (indigo) -->
     <div class="q-pa-md text-center" style="background:#1E2A6E;border-radius:18px;color:#FBF3E2">
       <div class="lab" style="color:#B9C0E6;margin:0">Shift duration</div>
-      <div style="font-weight:800;font-size:34px;color:#F4A300">{{ record.shift ?? 'In progress' }}</div>
-      <div style="font-size:13px;color:#B9C0E6">{{ fmt(record.punch_in) }}{{ record.punch_out ? ' — ' + fmt(record.punch_out) : ' — in progress' }}</div>
+      <div style="font-weight:800;font-size:34px;color:#F4A300">
+        {{ !record.punch_out ? 'In progress' : (record.completed ? record.shift : 'Not completed') }}
+      </div>
+      <div style="font-size:13px;color:#B9C0E6">
+        {{ fmt(record.punch_in) }}{{ record.punch_out ? ' — ' + fmt(record.punch_out) : ' — in progress' }}
+        <span v-if="record.punch_out && !record.completed"> · under 1 min</span>
+      </div>
     </div>
 
     <!-- punch in -->

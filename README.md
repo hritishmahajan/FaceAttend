@@ -100,6 +100,59 @@ Employee must be within OFFICE_RADIUS_METERS of (OFFICE_LAT, OFFICE_LNG)
 
 ---
 
+## System Design
+
+### Layered architecture (separation of concerns)
+
+**Backend** — every layer has a single responsibility, so any one can change without touching the others:
+
+```
+Routes  →  Services  →  Repositories  →  Database
+(HTTP)     (business)    (SQL only)       (SQLite)
+```
+
+- **Routes** are thin: `validate → call service → respond`. No business logic.
+- **Services** own the rules — OTP issuance, geofence enforcement, shift calculation, liveness policy.
+- **Repositories** are the *only* place SQL lives. Swap SQLite for Postgres and services stay unchanged.
+- **Config** (`config/index.js`) is the single source of truth for env; nothing else reads `process.env`.
+- **Cross-cutting**: central `AppError` + error handler, Joi validation middleware, Winston logging, rate limiting, singleton DB and email transporter.
+
+**Frontend** mirrors this: `Pages → Composables → API layer → Pinia stores`. Pages never call Axios directly; a single Axios instance injects the JWT and handles 401 redirects.
+
+### Key design decisions & trade-offs
+
+| Decision | Why | Trade-off |
+|---|---|---|
+| **On-device face recognition** (face-api.js) | Privacy — only a 128-number descriptor leaves the device, never the photo; also offloads compute from the server | Client is untrusted; mitigated with server-side geofence + liveness |
+| **Server-side geofence** (Haversine) | The client UI can be spoofed; the punch endpoint re-verifies GPS | Slightly more coupling client↔server |
+| **Stateless JWT auth** | Horizontal scale with no shared session store | Can't revoke a token before expiry (short 7d TTL mitigates) |
+| **SQLite + better-sqlite3** | Zero-ops, fast synchronous reads, perfect for this scale | Single-writer; would move to Postgres for multi-tenant load |
+| **SQLite → S3 via Litestream** | Durable persistence on an ephemeral free host with *no code change* | Not multi-region; point-in-time restore only |
+| **Brevo HTTP email API** | Host blocks SMTP ports; HTTPS API works anywhere | External dependency; graceful in-app OTP fallback |
+| **One codebase → SPA + PWA + APK** (Quasar) | Ship three targets without rewriting | Cordova WebView quirks (camera permissions) |
+
+### Reliability & data integrity
+- `UNIQUE(user_id, date)` prevents double punch-in per day; foreign keys + WAL mode on.
+- **Idempotent admin seeding** — the bootstrap admin syncs to env on every boot, so restarts on the persisted DB never crash or duplicate.
+- **Liveness (blink) check** and a **&lt;1-minute shift = "Not completed"** rule guard against spoofing and mis-punches.
+
+### Frequently asked (interview) questions
+
+**Q: How does the face match actually work?**
+Each video frame runs a 3-model pipeline: **TinyFaceDetector** finds the face, **FaceLandmark68** aligns it (68 points), and **FaceRecognitionNet** encodes it into a **128-dimensional descriptor** (a Float32 vector). At registration we store that vector. At punch time we compute the **Euclidean distance** between the live descriptor and the stored one; if it's below a threshold (~0.45) for several consecutive frames, it's a match. Same person ≈ 0.3–0.45; different people ≈ 0.6+. All of this runs **in the browser** — the server only ever sees the vector, never the image (the punch *photo* is stored separately, only as audit evidence).
+
+**Q: How do you prevent punch spoofing (e.g. holding up a photo, or faking location)?**
+Layered defenses:
+1. **Liveness detection** — the scanner tracks the **eye-aspect-ratio** across frames and requires a real **blink** before accepting a face. A static photo on a phone can't blink, so it's rejected.
+2. **Server-side geofence** — GPS is re-checked with the Haversine formula on the punch endpoint; faking the client UI doesn't help because the server independently rejects out-of-radius coordinates.
+3. **Single-face rule** — the frame must contain exactly one face.
+4. **Match margin + multi-frame confirmation** — a match must hold for several frames under a strict distance threshold, not a single lucky frame.
+5. **Mis-punch guard** — a shift under 1 minute is marked "Not completed."
+6. **Auth** — JWT-scoped identity + email-OTP 2FA, so you can only punch as yourself.
+*(A production system would add depth/IR liveness or a challenge-response head turn; blink liveness is the pragmatic on-device layer.)*
+
+---
+
 ## Tech Stack
 
 | Layer | Technology |

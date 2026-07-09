@@ -3,6 +3,18 @@ import * as faceapi from '@vladmandic/face-api';
 
 const MATCH_FRAMES_REQUIRED = 3;
 const SCAN_INTERVAL_MS = 300;
+// Eye-aspect-ratio thresholds for blink-based liveness (defeats photo spoofing:
+// a static image on a phone can't blink).
+const EAR_CLOSED = 0.20;
+const EAR_OPEN = 0.26;
+
+function dist(a, b) {
+  return Math.hypot(a.x - b.x, a.y - b.y);
+}
+// Eye aspect ratio from 6 face-api eye landmarks.
+function eyeAspectRatio(eye) {
+  return (dist(eye[1], eye[5]) + dist(eye[2], eye[4])) / (2 * dist(eye[0], eye[3]));
+}
 
 /**
  * Encapsulates all face-api.js camera + detection logic.
@@ -22,9 +34,11 @@ export function useFaceScanner(options, callbacks) {
   const status   = ref('Position your face in the oval');
   const state    = ref('idle'); // idle | scanning | success | error
 
-  let stream     = null;
-  let intervalId = null;
-  let matchCount = 0;
+  let stream       = null;
+  let intervalId   = null;
+  let matchCount   = 0;
+  let eyesClosed   = false;
+  let blinkDone    = false; // liveness: a real blink was observed this session
 
   // On Cordova/Android, getUserMedia only works once the native CAMERA runtime
   // permission is granted. Request it right before opening the camera (doing it
@@ -41,6 +55,9 @@ export function useFaceScanner(options, callbacks) {
   }
 
   async function start() {
+    blinkDone = false;
+    eyesClosed = false;
+    matchCount = 0;
     try {
       await ensureCameraPermission();
       stream = await navigator.mediaDevices.getUserMedia({
@@ -110,6 +127,22 @@ export function useFaceScanner(options, callbacks) {
       }
 
       const descriptor = Array.from(detections[0].descriptor);
+
+      // ── Liveness: require a blink before accepting the face. A photo held up
+      // to the camera stays static and can never satisfy this. ──
+      if (!blinkDone) {
+        const lm = detections[0].landmarks;
+        const ear = (eyeAspectRatio(lm.getLeftEye()) + eyeAspectRatio(lm.getRightEye())) / 2;
+        if (ear < EAR_CLOSED) eyesClosed = true;
+        else if (eyesClosed && ear > EAR_OPEN) { blinkDone = true; eyesClosed = false; }
+
+        if (!blinkDone) {
+          status.value = 'Blink once to confirm you are live';
+          state.value  = 'scanning';
+          matchCount   = 0;
+          return;
+        }
+      }
 
       if (mode === 'register') {
         status.value = 'Face detected – ready to capture';

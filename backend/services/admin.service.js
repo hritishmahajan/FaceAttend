@@ -21,13 +21,17 @@ function getAttendanceRecord(id) {
   if (!record) return null;
 
   let shift = null;
+  let completed = false;
   if (record.punch_in && record.punch_out) {
     const ms = new Date(record.punch_out) - new Date(record.punch_in);
+    // A shift under 1 minute is treated as not completed (likely a mis-punch).
+    completed = ms >= 60_000;
     const h = Math.floor(ms / 3_600_000);
     const m = Math.floor((ms % 3_600_000) / 60_000);
-    shift = `${h}h ${m}m`;
+    const s = Math.floor((ms % 60_000) / 1_000);
+    shift = `${h}h ${m}m ${s}s`;
   }
-  return { ...record, shift };
+  return { ...record, shift, completed };
 }
 
 function getEmployees() {
