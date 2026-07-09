@@ -22,7 +22,12 @@
             <template #prepend><q-icon name="phone" /></template>
           </q-input>
           <q-input v-model="form.password" label="Password" :type="showPwd ? 'text' : 'password'"
-            outlined dense :rules="[v => !!v || 'Required', v => v.length >= 6 || 'Min 6 chars']">
+            hint="At least 8 characters, with a letter and a number"
+            outlined dense :rules="[
+              v => !!v || 'Required',
+              v => v.length >= 8 || 'At least 8 characters',
+              v => /(?=.*[A-Za-z])(?=.*\d)/.test(v) || 'Include a letter and a number',
+            ]">
             <template #prepend><q-icon name="lock" /></template>
             <template #append>
               <q-icon :name="showPwd ? 'visibility_off' : 'visibility'" class="cursor-pointer" @click="showPwd = !showPwd" />
