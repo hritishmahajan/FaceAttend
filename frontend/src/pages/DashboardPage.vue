@@ -38,7 +38,7 @@
           </div>
           <div v-if="attendance.shiftDuration">
             <div class="text-caption text-grey">Shift</div>
-            <div class="text-body1 text-weight-medium text-positive">{{ attendance.shiftDuration }}</div>
+            <div class="text-body1 text-weight-medium" :class="shiftIncomplete ? 'text-negative' : 'text-positive'">{{ attendance.shiftDuration }}</div>
           </div>
         </div>
       </q-card-section>
@@ -65,6 +65,9 @@
           <q-icon name="shield" color="positive" size="14px" />On device — no photo leaves your phone
         </div>
       </template>
+      <q-chip v-else-if="shiftIncomplete" color="negative" icon="error" text-color="white" size="lg">
+        Shift not completed – under 1 min
+      </q-chip>
       <q-chip v-else color="positive" icon="check_circle" text-color="white" size="lg">
         Shift complete – {{ attendance.shiftDuration }}
       </q-chip>
@@ -182,6 +185,7 @@ const geoStatusLabel = computed(() => {
 const canScan = computed(() =>
   insideGeofence.value && (attendance.isPunchedIn ? !attendance.isPunchedOut : auth.hasFace)
 );
+const shiftIncomplete = computed(() => attendance.shiftDuration === 'Not completed');
 const scanOpen  = ref(false);
 const scanType  = ref('in');
 const successOpen = ref(false);
